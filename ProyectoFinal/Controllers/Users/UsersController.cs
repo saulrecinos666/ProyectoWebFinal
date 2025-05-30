@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Users;
@@ -27,7 +28,6 @@ namespace ProyectoFinal.Controllers.Users
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _context.Users
-                .Where(user => user.IsActive == true)
                 .Select(user => new ResponseUserDto
                 {
                     Username = user.Username,
@@ -39,14 +39,21 @@ namespace ProyectoFinal.Controllers.Users
                 })
                 .ToListAsync();
 
+            if (users is null) 
+            {
+                return NotFound("No hay registros");
+            }
+
             return Ok(users);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null) { return NotFound(); }
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
+            if (user == null) return NotFound("No hay registros");
 
             var userDto = new ResponseUserDto
             {
@@ -79,19 +86,26 @@ namespace ProyectoFinal.Controllers.Users
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetUserById), new { id = user.UserId }, new ResponseUserDto
+
+            var createdUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == user.UserId);
+
+            var responseDto = new CreatedUserDto
             {
                 Username = user.Username,
                 Email = user.Email,
-                CreatedBy = user.CreatedBy,
                 CreatedAt = user.CreatedAt
-            });
+            };
+
+            return CreatedAtAction(nameof(GetUserById), new { id = user.UserId }, responseDto);
         }
 
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto updateUserDto)
         {
-            var existingUser = await _context.Users.FindAsync(id);
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
             if (existingUser == null) return NotFound("Usuario no encontrado");
 
             if (!string.IsNullOrWhiteSpace(updateUserDto.Password))
@@ -99,8 +113,16 @@ namespace ProyectoFinal.Controllers.Users
                 existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, updateUserDto.Password);
             }
 
-            existingUser.Username = updateUserDto.Username;
-            existingUser.Email = updateUserDto.Email;
+            if (!string.IsNullOrWhiteSpace(updateUserDto.Username))
+            {
+                existingUser.Username = updateUserDto.Username;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updateUserDto.Email))
+            {
+                existingUser.Email = updateUserDto.Email;
+            }
+
             existingUser.ModifiedAt = DateTime.Now;
             existingUser.ModifiedBy = GetUserId();
 
@@ -108,10 +130,12 @@ namespace ProyectoFinal.Controllers.Users
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        [HttpPatch("{id}/desactivate")]
+        public async Task<IActionResult> DesactivateUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
             if (user == null) return NotFound();
 
             user.IsActive = false;

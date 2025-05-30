@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Specialties;
+using ProyectoFinal.Models.Specialties.Dto;
 
 namespace ProyectoFinal.Controllers.Specialties
 {
@@ -22,43 +24,75 @@ namespace ProyectoFinal.Controllers.Specialties
         [HttpGet]
         public async Task<IActionResult> GetAllSpecialties()
         {
-            var specialties = await _context.Specialties.ToListAsync();
+            var specialties = await _context.Specialties
+                .Select(s => new ResponseSpecialtyDto 
+                {
+                    Name = s.Name,
+                    Description = s.Description
+                })               
+                .ToListAsync();
+
             return Ok(specialties);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSpecialtyById(int id)
         {
-            var specialty = await _context.Specialties.FindAsync(id);
+            var specialty = await _context.Specialties
+                .FirstOrDefaultAsync(s => s.SpecialtyId == id);
+
             if (specialty == null) { return NotFound(); }
-            return Ok(specialty);
+
+            var specialtyDto = new ResponseSpecialtyDto
+            {
+                Name = specialty.Name,
+                Description = specialty.Description
+            };
+
+            return Ok(specialtyDto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateSpecialty([FromBody] Specialty specialty)
+        public async Task<IActionResult> CreateSpecialty([FromBody] CreateSpecialtyDto createSpecialtyDto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            specialty.IsActive = true;
-            specialty.CreatedAt = DateTime.Now;
-            specialty.CreatedBy = GetUserId();
+            var specialty = new Specialty
+            {
+                Name = createSpecialtyDto.Name,
+                Description = createSpecialtyDto.Description,
+                IsActive = true,
+                CreatedAt = DateTime.Now,
+                CreatedBy = GetUserId()
+            };
 
             _context.Specialties.Add(specialty);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetSpecialtyById), new { id = specialty.SpecialtyId }, specialty);
+
+            var createdSpecialty = await _context.Specialties
+                .FirstOrDefaultAsync(s => s.SpecialtyId == specialty.SpecialtyId);
+
+            var responseDto = new ResponseSpecialtyDto
+            {
+                Name = createdSpecialty.Name,
+                Description = createdSpecialty.Description,
+                CreatedBy = createdSpecialty.CreatedBy,
+                CreatedAt = createdSpecialty.CreatedAt
+            };
+
+            return CreatedAtAction(nameof(GetSpecialtyById), new { id = specialty.SpecialtyId }, responseDto);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSpecialty(int id, [FromBody] Specialty specialty)
+        public async Task<IActionResult> UpdateSpecialty(int id, [FromBody] UpdateSpecialtyDto updateSpecialtyDto)
         {
-            if (id != specialty.SpecialtyId) return BadRequest();
+            var existingSpecialty = await _context.Specialties
+                .FirstOrDefaultAsync(s => s.SpecialtyId == id);
 
-            var existingSpecialty = await _context.Specialties.FindAsync(id);
             if (existingSpecialty == null) return NotFound("Especialidad no encontrada.");
 
-            existingSpecialty.SpecialtyName = specialty.SpecialtyName;
-            existingSpecialty.Description = specialty.Description;
-            existingSpecialty.IsActive = specialty.IsActive;
+            existingSpecialty.Name = updateSpecialtyDto.Name;
+            existingSpecialty.Description = updateSpecialtyDto.Description;
             existingSpecialty.ModifiedAt = DateTime.Now;
             existingSpecialty.ModifiedBy = GetUserId();
 
@@ -66,10 +100,12 @@ namespace ProyectoFinal.Controllers.Specialties
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSpecialty(int id)
+        [HttpPatch("{id}/desactivate")]
+        public async Task<IActionResult> DesactivateSpecialty(int id)
         {
-            var specialty = await _context.Specialties.FindAsync(id);
+            var specialty = await _context.Specialties
+                .FirstOrDefaultAsync(s => s.SpecialtyId == id);
+
             if (specialty == null) return NotFound();
 
             specialty.DeletedAt = DateTime.Now;

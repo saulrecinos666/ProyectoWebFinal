@@ -7,6 +7,7 @@ using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Users;
 using StackExchange.Redis;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 

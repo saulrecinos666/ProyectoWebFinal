@@ -31,7 +31,7 @@ public partial class Doctor : BaseEntity
     [Required(ErrorMessage = "El Id de la Especialidad es requerido.")]
     public int SpecialtyId { get; set; }
 
-    public int? InstitutionId { get; set; }
+    public int InstitutionId { get; set; }
 
     [Required(ErrorMessage = "El Correo es requerido.")]
     [StringLength(100, ErrorMessage = "El Correo no puede exceder los 100 caracteres.")]
@@ -41,7 +41,7 @@ public partial class Doctor : BaseEntity
 
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
-    public virtual Institution? Institution { get; set; }
+    public virtual Institution Institution { get; set; }
 
     public virtual Specialty Specialty { get; set; } = null!;
 }

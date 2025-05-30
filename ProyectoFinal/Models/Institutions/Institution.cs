@@ -28,7 +28,7 @@ public partial class Institution : BaseEntity
 
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
-    public virtual District DistrictCodeNavigation { get; set; } = null!;
+    public virtual District District { get; set; } = null!;
 
     public virtual ICollection<Doctor> Doctors { get; set; } = new List<Doctor>();
 }

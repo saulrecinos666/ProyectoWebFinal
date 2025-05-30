@@ -1,5 +1,6 @@
 ﻿using ProyectoFinal.Models.Appointments;
 using ProyectoFinal.Models.Base;
+using ProyectoFinal.Models.Users;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProyectoFinal.Models.Patients;
@@ -41,6 +42,10 @@ public partial class Patient : BaseEntity
     [Required(ErrorMessage = "El Correo es requerido.")]
     [StringLength(100, ErrorMessage = "El Correo no puede exceder los 100 caracteres.")]
     public string Email { get; set; }
+
+    public int UserId { get; set; }
+
+    public virtual User User { get; set; } = null!;
 
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

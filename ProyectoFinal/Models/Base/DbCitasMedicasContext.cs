@@ -9,6 +9,7 @@ using ProyectoFinal.Models.Patients;
 using ProyectoFinal.Models.Permissions;
 using ProyectoFinal.Models.Specialties;
 using ProyectoFinal.Models.Users;
+using System.Linq.Expressions;
 
 namespace ProyectoFinal.Models.Base;
 
@@ -50,8 +51,12 @@ public partial class DbCitasMedicasContext : DbContext
     public virtual DbSet<UserToken> UserTokens { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=DESKTOP-KFIGMT6\\SQLEXPRESS;Database=dbCitasMedicas;Trusted_Connection=True;TrustServerCertificate=True;");
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("Name=DefaultConnection");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -67,8 +72,6 @@ public partial class DbCitasMedicasContext : DbContext
 
             entity.HasIndex(e => e.InstitutionId, "IDX_Appointments_InstitutionId");
 
-            entity.HasIndex(e => e.UserId, "IDX_Appointments_UserId");
-
             entity.Property(e => e.AppointmentDate).HasColumnType("datetime");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -79,8 +82,6 @@ public partial class DbCitasMedicasContext : DbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.ModifiedAt).HasColumnType("datetime");
             entity.Property(e => e.ModifiedBy).HasMaxLength(50);
-            entity.Property(e => e.Status)
-                .HasMaxLength(50);
 
             entity.Property(e => e.Status)
                 .HasDefaultValue(AppointmentStatus.Scheduled)
@@ -89,19 +90,18 @@ public partial class DbCitasMedicasContext : DbContext
 
             entity.HasOne(d => d.Doctor).WithMany(p => p.Appointments)
                 .HasForeignKey(d => d.DoctorId)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_Appointments_Doctors");
 
             entity.HasOne(d => d.Institution).WithMany(p => p.Appointments)
                 .HasForeignKey(d => d.InstitutionId)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_Appointments_Institutions");
 
             entity.HasOne(d => d.Patient).WithMany(p => p.Appointments)
                 .HasForeignKey(d => d.PatientId)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_Appointments_Patients");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Appointments)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_Appointments_Users");
         });
 
         modelBuilder.Entity<Department>(entity =>
@@ -122,7 +122,7 @@ public partial class DbCitasMedicasContext : DbContext
 
             entity.HasOne(d => d.MunicipalityCodeNavigation).WithMany(p => p.Districts)
                 .HasForeignKey(d => d.MunicipalityCode)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK__Districts__Munic__3C69FB99");
         });
 
@@ -163,11 +163,12 @@ public partial class DbCitasMedicasContext : DbContext
 
             entity.HasOne(d => d.Institution).WithMany(p => p.Doctors)
                 .HasForeignKey(d => d.InstitutionId)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK__Doctors__Institu__6383C8BA");
 
             entity.HasOne(d => d.Specialty).WithMany(p => p.Doctors)
                 .HasForeignKey(d => d.SpecialtyId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK__Doctors__Special__628FA481");
         });
 
@@ -196,9 +197,9 @@ public partial class DbCitasMedicasContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.Phone).HasMaxLength(8);
 
-            entity.HasOne(d => d.DistrictCodeNavigation).WithMany(p => p.Institutions)
+            entity.HasOne(d => d.District).WithMany(p => p.Institutions)
                 .HasForeignKey(d => d.DistrictCode)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK__Instituti__Distr__5BE2A6F2");
         });
 
@@ -212,7 +213,7 @@ public partial class DbCitasMedicasContext : DbContext
 
             entity.HasOne(d => d.DepartmentCodeNavigation).WithMany(p => p.Municipalities)
                 .HasForeignKey(d => d.DepartmentCode)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK__Municipal__Depar__398D8EEE");
         });
 
@@ -225,6 +226,8 @@ public partial class DbCitasMedicasContext : DbContext
             entity.HasIndex(e => e.PatientId, "IDX_Patients_PatientId");
 
             entity.HasIndex(e => e.Dui, "UQ__Patients__C03671B96FD1186B").IsUnique();
+
+            entity.HasIndex(e => e.UserId, "IDX_Patient_UserId");
 
             entity.Property(e => e.Address).HasMaxLength(200);
             entity.Property(e => e.CreatedAt)
@@ -246,6 +249,11 @@ public partial class DbCitasMedicasContext : DbContext
             entity.Property(e => e.ModifiedBy).HasMaxLength(50);
             entity.Property(e => e.Phone).HasMaxLength(8);
             entity.Property(e => e.SecondLastName).HasMaxLength(50);
+
+            entity.HasOne(e => e.User).WithMany(e => e.Patients)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK__Patients__User__666");
         });
 
         modelBuilder.Entity<Permission>(entity =>
@@ -267,9 +275,9 @@ public partial class DbCitasMedicasContext : DbContext
 
             entity.HasIndex(e => e.SpecialtyId, "IDX_Specialties_SpecialtyId");
 
-            entity.HasIndex(e => e.SpecialtyName, "IDX_Specialties_SpecialtyName");
+            entity.HasIndex(e => e.Name, "IDX_Specialties_SpecialtyName");
 
-            entity.HasIndex(e => e.SpecialtyName, "UQ__Specialt__7DCA5748215E07C4").IsUnique();
+            entity.HasIndex(e => e.Name, "UQ__Specialt__7DCA5748215E07C4").IsUnique();
 
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -281,7 +289,7 @@ public partial class DbCitasMedicasContext : DbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.ModifiedAt).HasColumnType("datetime");
             entity.Property(e => e.ModifiedBy).HasMaxLength(50);
-            entity.Property(e => e.SpecialtyName).HasMaxLength(100);
+            entity.Property(e => e.Name).HasMaxLength(100);
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -336,12 +344,12 @@ public partial class DbCitasMedicasContext : DbContext
 
             entity.HasOne(d => d.Permission).WithMany(p => p.UserPermissions)
                 .HasForeignKey(d => d.PermissionId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_UserPermissions_Permissions");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserPermissions)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_UserPermissions_Users");
         });
 
@@ -359,6 +367,19 @@ public partial class DbCitasMedicasContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK_UserTokens_Users");
         });
+
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                var parameter = Expression.Parameter(entityType.ClrType, "e");
+                var property = Expression.Property(parameter, nameof(BaseEntity.IsActive));
+                var filter = Expression.Lambda(Expression.Equal(property, Expression.Constant(true)), parameter);
+
+                modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
+            }
+        }
 
         OnModelCreatingPartial(modelBuilder);
     }

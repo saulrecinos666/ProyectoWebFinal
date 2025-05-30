@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProyectoFinal.Models.Base;
 
@@ -11,9 +12,11 @@ using ProyectoFinal.Models.Base;
 namespace ProyectoFinal.Migrations
 {
     [DbContext(typeof(DbCitasMedicasContext))]
-    partial class DbCitasMedicasContextModelSnapshot : ModelSnapshot
+    [Migration("20250528055730_AddPatientUserRelationFixes1")]
+    partial class AddPatientUserRelationFixes1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -417,8 +420,13 @@ namespace ProyectoFinal.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId1")
+                        .HasColumnType("int");
+
                     b.HasKey("PatientId")
                         .HasName("PK__Patients__970EC366DA5BA251");
+
+                    b.HasIndex("UserId1");
 
                     b.HasIndex(new[] { "UserId" }, "IDX_Patient_UserId");
 
@@ -763,11 +771,14 @@ namespace ProyectoFinal.Migrations
             modelBuilder.Entity("ProyectoFinal.Models.Patients.Patient", b =>
                 {
                     b.HasOne("ProyectoFinal.Models.Users.User", "User")
-                        .WithMany("Patients")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired()
-                        .HasConstraintName("FK__Patients__User__666");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProyectoFinal.Models.Users.User", null)
+                        .WithMany("Patients")
+                        .HasForeignKey("UserId1");
 
                     b.Navigation("User");
                 });

@@ -31,11 +31,9 @@ public partial class Appointment : BaseEntity
 
     public string? Notes { get; set; }
 
-    public virtual Doctor? Doctor { get; set; }
+    public virtual Doctor Doctor { get; set; }
 
-    public virtual Institution? Institution { get; set; }
+    public virtual Institution Institution { get; set; }
 
-    public virtual Patient? Patient { get; set; }
-
-    public virtual User? User { get; set; }
+    public virtual Patient Patient { get; set; }
 }

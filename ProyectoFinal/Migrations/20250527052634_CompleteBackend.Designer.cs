@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProyectoFinal.Models.Base;
 
@@ -11,9 +12,11 @@ using ProyectoFinal.Models.Base;
 namespace ProyectoFinal.Migrations
 {
     [DbContext(typeof(DbCitasMedicasContext))]
-    partial class DbCitasMedicasContextModelSnapshot : ModelSnapshot
+    [Migration("20250527052634_CompleteBackend")]
+    partial class CompleteBackend
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -95,6 +98,8 @@ namespace ProyectoFinal.Migrations
                     b.HasIndex(new[] { "DoctorId" }, "IDX_Appointments_DoctorId");
 
                     b.HasIndex(new[] { "InstitutionId" }, "IDX_Appointments_InstitutionId");
+
+                    b.HasIndex(new[] { "UserId" }, "IDX_Appointments_UserId");
 
                     b.ToTable("Appointments");
                 });
@@ -180,7 +185,7 @@ namespace ProyectoFinal.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("InstitutionId")
+                    b.Property<int?>("InstitutionId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
@@ -414,13 +419,8 @@ namespace ProyectoFinal.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("PatientId")
                         .HasName("PK__Patients__970EC366DA5BA251");
-
-                    b.HasIndex(new[] { "UserId" }, "IDX_Patient_UserId");
 
                     b.HasIndex(new[] { "Dui" }, "IDX_Patients_DUI");
 
@@ -678,29 +678,38 @@ namespace ProyectoFinal.Migrations
                     b.HasOne("ProyectoFinal.Models.Doctors.Doctor", "Doctor")
                         .WithMany("Appointments")
                         .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_Appointments_Doctors");
 
                     b.HasOne("ProyectoFinal.Models.Institutions.Institution", "Institution")
                         .WithMany("Appointments")
                         .HasForeignKey("InstitutionId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_Appointments_Institutions");
 
                     b.HasOne("ProyectoFinal.Models.Patients.Patient", "Patient")
                         .WithMany("Appointments")
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_Appointments_Patients");
+
+                    b.HasOne("ProyectoFinal.Models.Users.User", "User")
+                        .WithMany("Appointments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_Appointments_Users");
 
                     b.Navigation("Doctor");
 
                     b.Navigation("Institution");
 
                     b.Navigation("Patient");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ProyectoFinal.Models.Districts.District", b =>
@@ -708,7 +717,6 @@ namespace ProyectoFinal.Migrations
                     b.HasOne("ProyectoFinal.Models.Municipalities.Municipality", "MunicipalityCodeNavigation")
                         .WithMany("Districts")
                         .HasForeignKey("MunicipalityCode")
-                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK__Districts__Munic__3C69FB99");
 
@@ -720,14 +728,11 @@ namespace ProyectoFinal.Migrations
                     b.HasOne("ProyectoFinal.Models.Institutions.Institution", "Institution")
                         .WithMany("Doctors")
                         .HasForeignKey("InstitutionId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired()
                         .HasConstraintName("FK__Doctors__Institu__6383C8BA");
 
                     b.HasOne("ProyectoFinal.Models.Specialties.Specialty", "Specialty")
                         .WithMany("Doctors")
                         .HasForeignKey("SpecialtyId")
-                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK__Doctors__Special__628FA481");
 
@@ -741,7 +746,6 @@ namespace ProyectoFinal.Migrations
                     b.HasOne("ProyectoFinal.Models.Districts.District", "District")
                         .WithMany("Institutions")
                         .HasForeignKey("DistrictCode")
-                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK__Instituti__Distr__5BE2A6F2");
 
@@ -753,23 +757,10 @@ namespace ProyectoFinal.Migrations
                     b.HasOne("ProyectoFinal.Models.Departments.Department", "DepartmentCodeNavigation")
                         .WithMany("Municipalities")
                         .HasForeignKey("DepartmentCode")
-                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK__Municipal__Depar__398D8EEE");
 
                     b.Navigation("DepartmentCodeNavigation");
-                });
-
-            modelBuilder.Entity("ProyectoFinal.Models.Patients.Patient", b =>
-                {
-                    b.HasOne("ProyectoFinal.Models.Users.User", "User")
-                        .WithMany("Patients")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired()
-                        .HasConstraintName("FK__Patients__User__666");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ProyectoFinal.Models.Users.UserLoginHistory", b =>
@@ -787,14 +778,12 @@ namespace ProyectoFinal.Migrations
                     b.HasOne("ProyectoFinal.Models.Permissions.Permission", "Permission")
                         .WithMany("UserPermissions")
                         .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK_UserPermissions_Permissions");
 
                     b.HasOne("ProyectoFinal.Models.Users.User", "User")
                         .WithMany("UserPermissions")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK_UserPermissions_Users");
 
@@ -857,7 +846,7 @@ namespace ProyectoFinal.Migrations
 
             modelBuilder.Entity("ProyectoFinal.Models.Users.User", b =>
                 {
-                    b.Navigation("Patients");
+                    b.Navigation("Appointments");
 
                     b.Navigation("UserLoginHistories");
 

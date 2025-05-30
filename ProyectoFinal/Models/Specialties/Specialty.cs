@@ -7,7 +7,7 @@ public partial class Specialty : BaseEntity
 {
     public int SpecialtyId { get; set; }
 
-    public string SpecialtyName { get; set; } = null!;
+    public string Name { get; set; } = null!;
 
     public string? Description { get; set; }
 

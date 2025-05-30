@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProyectoFinal.Models.Base;
 
@@ -11,9 +12,11 @@ using ProyectoFinal.Models.Base;
 namespace ProyectoFinal.Migrations
 {
     [DbContext(typeof(DbCitasMedicasContext))]
-    partial class DbCitasMedicasContextModelSnapshot : ModelSnapshot
+    [Migration("20250528055222_AddPatientUserRelationFixes")]
+    partial class AddPatientUserRelationFixes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -87,6 +90,8 @@ namespace ProyectoFinal.Migrations
                         .HasName("PK__Appointm__8ECDFCC2C434A351");
 
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex(new[] { "AppointmentDate" }, "IDX_Appointments_AppointmentDate");
 
@@ -696,6 +701,12 @@ namespace ProyectoFinal.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Appointments_Patients");
 
+                    b.HasOne("ProyectoFinal.Models.Users.User", null)
+                        .WithMany("Appointments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Doctor");
 
                     b.Navigation("Institution");
@@ -763,11 +774,10 @@ namespace ProyectoFinal.Migrations
             modelBuilder.Entity("ProyectoFinal.Models.Patients.Patient", b =>
                 {
                     b.HasOne("ProyectoFinal.Models.Users.User", "User")
-                        .WithMany("Patients")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired()
-                        .HasConstraintName("FK__Patients__User__666");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -857,7 +867,7 @@ namespace ProyectoFinal.Migrations
 
             modelBuilder.Entity("ProyectoFinal.Models.Users.User", b =>
                 {
-                    b.Navigation("Patients");
+                    b.Navigation("Appointments");
 
                     b.Navigation("UserLoginHistories");
 

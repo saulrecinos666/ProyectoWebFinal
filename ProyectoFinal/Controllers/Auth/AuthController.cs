@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using ProyectoFinal.Models.Base;
@@ -17,19 +18,25 @@ namespace ProyectoFinal.Controllers.Auth
         private readonly DbCitasMedicasContext _context;
         private readonly IConnectionMultiplexer _redis;
         private readonly IConfiguration _configuration;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public AuthController(DbCitasMedicasContext context, IConnectionMultiplexer redis, IConfiguration configuration)
+        public AuthController(
+            DbCitasMedicasContext context, 
+            IConnectionMultiplexer redis, 
+            IConfiguration configuration, 
+            IPasswordHasher<User> passwordHasher)
         {
             _context = context;
             _redis = redis;
             _configuration = configuration;
+            _passwordHasher = passwordHasher;
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var user = _context.Users.FirstOrDefault(u => u.Username == request.Username);
-            if (user == null || user.PasswordHash != request.Password)
+            if (user == null || _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password) == PasswordVerificationResult.Failed)
                 return Unauthorized(new
                 {
                     Messagge = "Credenciales incorrectas."

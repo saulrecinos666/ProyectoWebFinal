@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Doctors;
-using System.Security.Claims;
+using ProyectoFinal.Models.Doctors.Dto;
 
 namespace ProyectoFinal.Controllers.Doctors
 {
@@ -24,10 +24,26 @@ namespace ProyectoFinal.Controllers.Doctors
         public async Task<IActionResult> GetAllDoctors()
         {
             var doctors = await _context.Doctors
-                .Include(a => a.Specialty)
-                .Include(a => a.Institution)
-                .Where(a => a.IsActive)
+                .Include(d => d.Specialty)
+                .Include(d => d.Institution)
+                .Select(d => new ResponseDoctorDto
+                {
+                    FirstName = d.FirstName,
+                    LastName = d.LastName,
+                    MiddleName = d.MiddleName,
+                    SecondLastName = d.SecondLastName,
+                    Dui = d.Dui,
+                    Email = d.Email,
+                    Phone = d.Phone,
+                    SpecialtyName = d.Specialty != null ? d.Specialty.Name : "NA",
+                    InstitutionName = d.Institution != null ? d.Institution.Name : "NA",
+                    CreatedBy = d.CreatedBy,
+                    CreatedAt = d.CreatedAt,
+                    ModifiedBy = d.ModifiedBy,
+                    ModifiedAt = d.ModifiedAt
+                })
                 .ToListAsync();
+
             return Ok(doctors);
         }
 
@@ -35,52 +51,96 @@ namespace ProyectoFinal.Controllers.Doctors
         public async Task<IActionResult> GetDoctorById(int id)
         {
             var doctor = await _context.Doctors
-                .Include(a => a.Specialty)
-                .Include(a => a.Institution)
-                .FirstOrDefaultAsync(a => a.DoctorId == id && a.IsActive);
+                .Include(d => d.Specialty)
+                .Include(d => d.Institution)
+                .FirstOrDefaultAsync(a => a.DoctorId == id);
 
             if (doctor == null) return NotFound();
-            return Ok(doctor);
+
+            var doctorDto = new ResponseDoctorDto
+            {
+                FirstName = doctor.FirstName,
+                LastName = doctor.LastName,
+                MiddleName = doctor.MiddleName,
+                SecondLastName = doctor.SecondLastName,
+                Dui = doctor.Dui,
+                Email = doctor.Email,
+                Phone = doctor.Phone,
+                SpecialtyName = doctor.Specialty != null ? doctor.Specialty.Name : "NA",
+                InstitutionName = doctor.Institution != null ? doctor.Institution.Name : "NA",
+                CreatedBy = doctor.CreatedBy,
+                CreatedAt = doctor.CreatedAt,
+                ModifiedBy = doctor.ModifiedBy,
+                ModifiedAt = doctor.ModifiedAt
+            };
+
+            return Ok(doctorDto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateDoctor([FromBody] Doctor doctor)
+        public async Task<IActionResult> CreateDoctor([FromBody] CreateDoctorDto createDoctorDto)
         {
-            if (!ModelState.IsValid) return BadRequest();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            if (!_context.Specialties.Any(s => s.SpecialtyId == doctor.SpecialtyId))
-                return BadRequest("La Especialidad no existe");
-
-            if (!_context.Institutions.Any(i => i.InstitutionId == doctor.InstitutionId))
-                return BadRequest("La Institucion no existe");
-
-            doctor.IsActive = true;
-            doctor.CreatedAt = DateTime.Now;
-            doctor.CreatedBy = GetUserId();
+            var doctor = new Doctor
+            {
+                FirstName = createDoctorDto.FirstName,
+                MiddleName = createDoctorDto.MiddleName,
+                LastName = createDoctorDto.LastName,
+                SecondLastName = createDoctorDto.SecondLastName,
+                Dui = createDoctorDto.Dui,
+                Email = createDoctorDto.Email,
+                Phone = createDoctorDto.Phone,
+                SpecialtyId = createDoctorDto.SpecialtyId,
+                InstitutionId = createDoctorDto.InstitutionId,
+                IsActive = true,
+                CreatedBy = GetUserId(),
+                CreatedAt = DateTime.Now
+            };
 
             _context.Doctors.Add(doctor);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetDoctorById), new { id = doctor }, doctor);
+
+            var createDoctor = await _context.Doctors
+                .Include(d => d.Specialty)
+                .Include(d => d.Institution)
+                .FirstOrDefaultAsync(d => d.DoctorId == doctor.DoctorId);
+
+            var responseDto = new ResponseDoctorDto
+            {
+                FirstName = createDoctor.FirstName,
+                MiddleName = createDoctor.MiddleName,
+                LastName = createDoctor.LastName,
+                SecondLastName = createDoctor.SecondLastName,
+                Dui = createDoctor.Dui,
+                Email = createDoctor.Email,
+                Phone = createDoctor.Phone,
+                SpecialtyName = createDoctor.Specialty != null ? createDoctor.Specialty.Name : "NA",
+                InstitutionName = createDoctor.Institution != null ? createDoctor.Institution.Name : "NA",
+                CreatedBy = createDoctor.CreatedBy,
+                CreatedAt = createDoctor.CreatedAt
+            };
+
+            return CreatedAtAction(nameof(GetDoctorById), new { id = doctor.DoctorId }, responseDto);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateDoctor(int id, [FromBody] Doctor doctor)
+        public async Task<IActionResult> UpdateDoctor(int id, [FromBody] UpdateDoctorDto updateDoctorDto)
         {
-            if (id != doctor.DoctorId) return BadRequest("El Id del Doctor no existe");
+            var existingDoctor = await _context.Doctors
+                .FirstOrDefaultAsync(d => d.DoctorId == id);
 
-            var existingDoctor = await _context.Doctors.FindAsync(id);
-            if (existingDoctor == null) return NotFound();
+            if (existingDoctor == null) return NotFound("Doctor no encontrado");
 
-            existingDoctor.FirstName = doctor.FirstName;
-            existingDoctor.MiddleName = doctor.MiddleName;
-            existingDoctor.LastName = doctor.LastName;
-            existingDoctor.SecondLastName = doctor.SecondLastName;
-            existingDoctor.Dui = doctor.Dui;
-            existingDoctor.Email = doctor.Email;
-            existingDoctor.Phone = doctor.Phone;
-            existingDoctor.IsActive = doctor.IsActive;
-            existingDoctor.SpecialtyId = doctor.SpecialtyId;
-            existingDoctor.InstitutionId = doctor.InstitutionId;
+            existingDoctor.FirstName = updateDoctorDto.FirstName;
+            existingDoctor.MiddleName = updateDoctorDto.MiddleName;
+            existingDoctor.LastName = updateDoctorDto.LastName;
+            existingDoctor.SecondLastName = updateDoctorDto.SecondLastName;
+            existingDoctor.Dui = updateDoctorDto.Dui;
+            existingDoctor.Email = updateDoctorDto.Email;
+            existingDoctor.Phone = updateDoctorDto.Phone;
+            existingDoctor.SpecialtyId = updateDoctorDto.SpecialtyId;
+            existingDoctor.InstitutionId = updateDoctorDto.InstitutionId;
             existingDoctor.ModifiedAt = DateTime.Now;
             existingDoctor.ModifiedBy = GetUserId();
 
@@ -88,10 +148,12 @@ namespace ProyectoFinal.Controllers.Doctors
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDoctor(int id)
+        [HttpPatch("{id}/desactivate")]
+        public async Task<IActionResult> DesactivateDoctor(int id)
         {
-            var doctor = await _context.Doctors.FindAsync(id);
+            var doctor = await _context.Doctors
+                .FirstOrDefaultAsync(d => d.DoctorId == id);
+
             if (doctor == null) return NotFound();
 
             doctor.DeletedAt = DateTime.Now;

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Patients;
+using ProyectoFinal.Models.Patients.Dto;
 
 namespace ProyectoFinal.Controllers.Patients
 {
@@ -22,51 +23,124 @@ namespace ProyectoFinal.Controllers.Patients
         [HttpGet]
         public async Task<IActionResult> GetAllPatients()
         {
-            var patients = await _context.Patients.ToListAsync();
+            var patients = await _context.Patients
+                .Select(p => new ResponsePatientDto 
+                {
+                    FirstName = p.FirstName,
+                    MiddleName = p.MiddleName,
+                    LastName = p.LastName,
+                    SecondLastName = p.SecondLastName,
+                    Dui = p.Dui,
+                    Address = p.Address,
+                    Email = p.Email,
+                    Phone = p.Phone,
+                    Gender = p.Gender,
+                    DateOfBirth = p.DateOfBirth,
+                    CreatedBy = p.CreatedBy,
+                    CreatedAt = p.CreatedAt,
+                    ModifiedBy = p.ModifiedBy,
+                    ModifiedAt = p.ModifiedAt
+                })
+                .ToListAsync();
+
             return Ok(patients);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPatientById(int id)
         {
-            var patient = await _context.Patients.FindAsync(id);
-            if (patient == null) { return NotFound(); }
-            return Ok(patient);
+            var patient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.PatientId == id);
+
+            if (patient == null) return NotFound();
+
+            var patientDto = new ResponsePatientDto
+            {
+                FirstName = patient.FirstName,
+                MiddleName = patient.MiddleName,
+                LastName = patient.LastName,
+                SecondLastName = patient.SecondLastName,
+                Dui = patient.Dui,
+                Address = patient.Address,
+                Email = patient.Email,
+                Phone = patient.Phone,
+                Gender = patient.Gender,
+                DateOfBirth = patient.DateOfBirth,
+                CreatedBy = patient.CreatedBy,
+                CreatedAt = patient.CreatedAt,
+                ModifiedBy = patient.ModifiedBy,
+                ModifiedAt = patient.ModifiedAt
+            };
+
+            return Ok(patientDto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreatePatient([FromBody] Patient patient)
+        public async Task<IActionResult> CreatePatient([FromBody] CreatePatientDto createPatientDto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            patient.IsActive = true;
-            patient.CreatedAt = DateTime.Now;
-            patient.CreatedBy = GetUserId();
+            var patient = new Patient
+            {
+                UserId = createPatientDto.UserId,
+                FirstName = createPatientDto.FirstName,
+                MiddleName = createPatientDto.MiddleName,
+                LastName = createPatientDto.LastName,
+                SecondLastName = createPatientDto.SecondLastName,
+                Dui = createPatientDto.Dui,
+                Address = createPatientDto.Address,
+                Email = createPatientDto.Email,
+                Phone = createPatientDto.Phone,
+                Gender = createPatientDto.Gender,
+                DateOfBirth = createPatientDto.DateOfBirth,
+                IsActive = true,
+                CreatedAt = DateTime.Now,
+                CreatedBy = GetUserId()
+            };
 
             _context.Patients.Add(patient);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetPatientById), new { id = patient.PatientId }, patient);
+
+            var createdPatient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.PatientId == patient.PatientId);
+
+            var responseDto = new ResponsePatientDto
+            {
+                FirstName = createdPatient.FirstName,
+                MiddleName = createdPatient.MiddleName,
+                LastName = createdPatient.LastName,
+                SecondLastName = createdPatient.SecondLastName,
+                Dui = createdPatient.Dui,
+                Address = createdPatient.Address,
+                Email = createdPatient.Email,
+                Phone = createdPatient.Phone,
+                Gender = createdPatient.Gender,
+                DateOfBirth = createdPatient.DateOfBirth,
+                CreatedAt = createdPatient.CreatedAt,
+                CreatedBy = createdPatient.CreatedBy
+            };
+
+            return CreatedAtAction(nameof(GetPatientById), new { id = patient.PatientId }, responseDto);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePatient(int id, [FromBody] Patient patient)
+        public async Task<IActionResult> UpdatePatient(int id, [FromBody] UpdatePatientDto updatePatientDto)
         {
-            if (id != patient.PatientId) return BadRequest();
+            var existingPatient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.PatientId == id);
 
-            var existingPatient = await _context.Patients.FindAsync(id);
             if (existingPatient == null) return NotFound("Paciente no encontrado");
 
-            existingPatient.FirstName = patient.FirstName;
-            existingPatient.MiddleName = patient.MiddleName;
-            existingPatient.LastName = patient.LastName;
-            existingPatient.SecondLastName = patient.SecondLastName;
-            existingPatient.Dui = patient.Dui;
-            existingPatient.DateOfBirth = patient.DateOfBirth;
-            existingPatient.Gender = patient.Gender;
-            existingPatient.Address = patient.Address;
-            existingPatient.Phone = patient.Phone;
-            existingPatient.Email = patient.Email;
-            existingPatient.IsActive = patient.IsActive;
+            existingPatient.FirstName = updatePatientDto.FirstName;
+            existingPatient.MiddleName = updatePatientDto.MiddleName;
+            existingPatient.LastName = updatePatientDto.LastName;
+            existingPatient.SecondLastName = updatePatientDto.SecondLastName;
+            existingPatient.Dui = updatePatientDto.Dui;
+            existingPatient.DateOfBirth = updatePatientDto.DateOfBirth;
+            existingPatient.Gender = updatePatientDto.Gender;
+            existingPatient.Address = updatePatientDto.Address;
+            existingPatient.Phone = updatePatientDto.Phone;
+            existingPatient.Email = updatePatientDto.Email;
             existingPatient.ModifiedAt = DateTime.Now;
             existingPatient.ModifiedBy = GetUserId();
 
@@ -74,10 +148,12 @@ namespace ProyectoFinal.Controllers.Patients
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePatient(int id)
+        [HttpPatch("{id}/desactivate")]
+        public async Task<IActionResult> DesactivatePatient(int id)
         {
-            var patient = await _context.Patients.FindAsync(id);
+            var patient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.PatientId == id);
+
             if (patient == null) return NotFound();
 
             patient.DeletedAt = DateTime.Now;
