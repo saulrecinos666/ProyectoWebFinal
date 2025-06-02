@@ -1,0 +1,140 @@
+﻿@{
+    ViewData["Title"] = "Chat por Usuario";
+}
+
+<div class="container mt-4" style="min-height: 80vh;">
+    <h1>Contenido de la Página Principal (Ejemplo)</h1>
+    <p>Este es el contenido principal de tu aplicación. El chat aparecerá flotando.</p>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+    <p>Más contenido para que veas el desplazamiento y el chat fijo.</p>
+</div>
+
+
+<div id="chat-widget-container" class="chat-closed">
+    <div id="chat-header">
+        <span id="loggedInUsernameDisplay">Chateando como: Usuario</span>
+        <button id="toggleChatBtn" class="btn btn-sm btn-light">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+    </div>
+
+    <div id="chat-content">
+        <div class="input-group mb-3">
+            <input id="messageInput" class="form-control" placeholder="Escribe tu mensaje..." />
+            <button id="sendBtn" class="btn btn-primary">Enviar</button>
+        </div>
+
+        <div id="chat" class="border rounded p-3 bg-light" style="height: 300px; overflow-y: auto;"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        (async function () { 
+
+            const token = localStorage.getItem("jwtToken");
+            const sendBtn = document.getElementById("sendBtn");
+            const messageInput = document.getElementById("messageInput");
+            const loggedInUsernameDisplay = document.getElementById("loggedInUsernameDisplay");
+            const toggleChatBtn = document.getElementById("toggleChatBtn"); 
+            const chatWidgetContainer = document.getElementById("chat-widget-container"); 
+
+
+            if (!token) {
+                console.error("Error: No se encontró el token JWT. Por favor, inicie sesión para usar el chat.");
+                sendBtn.disabled = true;
+                messageInput.disabled = true;
+                loggedInUsernameDisplay.textContent = "Para chatear, por favor, inicia sesión.";
+                toggleChatBtn.disabled = true; 
+                return;
+            }
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("http://192.168.1.31:5278/chathub", {
+                    accessTokenFactory: () => token
+                })
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("ReceiveMessage", function (user, message) {
+                const chat = document.getElementById("chat");
+                const msg = document.createElement("div");
+                msg.innerHTML = `<strong>${user}:</strong> ${message}`;
+                chat.appendChild(msg);
+                chat.scrollTop = chat.scrollHeight;
+            });
+
+            try {
+                await connection.start();
+                console.log("Conexión SignalR establecida!");
+
+                try {
+                    const base64Url = token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    const decodedToken = JSON.parse(jsonPayload);
+
+                    let usernameFromToken = "Usuario";
+                    if (decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"]) {
+                        usernameFromToken = decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
+                    } else if (decodedToken.unique_name) {
+                        usernameFromToken = decodedToken.unique_name;
+                    } else if (decodedToken.name) {
+                        usernameFromToken = decodedToken.name;
+                    }
+
+                    loggedInUsernameDisplay.textContent = `Chateando como: ${usernameFromToken}`;
+                    chatWidgetContainer.classList.remove('chat-closed'); 
+                    chatWidgetContainer.classList.add('chat-open'); 
+
+                } catch (e) {
+                    console.warn("No se pudo decodificar el token para obtener el nombre de usuario.", e);
+                    loggedInUsernameDisplay.textContent = "Chateando como: Usuario (Error al obtener nombre)";
+                }
+
+            } catch (err) {
+                console.error("Error al iniciar la conexión SignalR: ", err.toString());
+                sendBtn.disabled = true;
+                messageInput.disabled = true;
+                loggedInUsernameDisplay.textContent = "Error de conexión. Por favor, intente de nuevo.";
+                toggleChatBtn.disabled = true; 
+            }
+
+            toggleChatBtn.addEventListener("click", function() {
+                if (chatWidgetContainer.classList.contains('chat-open')) {
+                    chatWidgetContainer.classList.remove('chat-open');
+                    chatWidgetContainer.classList.add('chat-closed');
+                    toggleChatBtn.querySelector('i').classList.remove('fa-chevron-up');
+                    toggleChatBtn.querySelector('i').classList.add('fa-chevron-down');
+                } else {
+                    chatWidgetContainer.classList.remove('chat-closed');
+                    chatWidgetContainer.classList.add('chat-open');
+                    toggleChatBtn.querySelector('i').classList.remove('fa-chevron-down');
+                    toggleChatBtn.querySelector('i').classList.add('fa-chevron-up');
+                }
+            });
+
+
+            sendBtn.addEventListener("click", function () {
+                const message = messageInput.value.trim();
+
+                if (message) {
+                    connection.invoke("SendMessage", message)
+                                 .catch(err => console.error("Error al enviar mensaje:", err.toString()));
+                    messageInput.value = ""; 
+                }
+            });
+
+            messageInput.addEventListener("keypress", function (e) {
+                if (e.key === "Enter") {
+                    sendBtn.click();
+                }
+            });
+
+        })(); 
+    </script>
+}

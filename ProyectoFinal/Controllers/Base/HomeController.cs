@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using ProyectoFinal.Models;
-using ProyectoFinal.Models.Base;
+using ProyectoFinal.Models.Base; 
 
 namespace ProyectoFinal.Controllers.Base
 {
@@ -17,6 +16,11 @@ namespace ProyectoFinal.Controllers.Base
         }
 
         public IActionResult Index()
+        {
+            return RedirectToAction("Login", "Home");
+        }
+
+        public IActionResult Login()
         {
             return View();
         }
