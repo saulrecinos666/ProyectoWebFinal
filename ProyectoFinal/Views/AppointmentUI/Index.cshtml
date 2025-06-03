@@ -1,0 +1,177 @@
+﻿@{
+    ViewData["Title"] = "Gestión de Citas";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-calendar-check me-2"></i>Gestión de Citas Médicas</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAppointmentModal">
+            <i class="fas fa-plus-circle me-1"></i> Nueva Cita
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-striped" id="appointmentsTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Doctor</th>
+                    <th>Paciente</th>
+                    <th>Institución</th>
+                    <th>Fecha Cita</th>
+                    <th>Estado</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal fade" id="createAppointmentModal" tabindex="-1" aria-labelledby="createAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createAppointmentModalLabel">Crear Nueva Cita</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createAppointmentForm">
+                        <div class="mb-3">
+                            <label for="createDoctorSelect" class="form-label">Doctor</label>
+                            <select class="form-select" id="createDoctorSelect" required>
+                                <option value="">Seleccione un Doctor</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createPatientSelect" class="form-label">Paciente</label>
+                            <select class="form-select" id="createPatientSelect" required>
+                                <option value="">Seleccione un Paciente</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createInstitutionSelect" class="form-label">Institución</label>
+                            <select class="form-select" id="createInstitutionSelect" required>
+                                <option value="">Seleccione una Institución</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createAppointmentDate" class="form-label">Fecha y Hora de la Cita</label>
+                            <input type="datetime-local" class="form-control" id="createAppointmentDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createStatus" class="form-label">Estado</label>
+                            <select class="form-select" id="createStatus" required>
+                                <option value="0">Programada</option>
+                                <option value="1">Confirmada</option>
+                                <option value="2">Completada</option>
+                                <option value="3">Cancelada</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createNotes" class="form-label">Notas</label>
+                            <textarea class="form-control" id="createNotes" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Crear Cita</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editAppointmentModal" tabindex="-1" aria-labelledby="editAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editAppointmentModalLabel">Editar Cita</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAppointmentForm">
+                        <input type="hidden" id="editAppointmentId">
+                        <div class="mb-3">
+                            <label for="editDoctorSelect" class="form-label">Doctor</label>
+                            <select class="form-select" id="editDoctorSelect" required>
+                                <option value="">Seleccione un Doctor</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPatientSelect" class="form-label">Paciente</label>
+                            <select class="form-select" id="editPatientSelect" required>
+                                <option value="">Seleccione un Paciente</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editInstitutionSelect" class="form-label">Institución</label>
+                            <select class="form-select" id="editInstitutionSelect" required>
+                                <option value="">Seleccione una Institución</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAppointmentDate" class="form-label">Fecha y Hora de la Cita</label>
+                            <input type="datetime-local" class="form-control" id="editAppointmentDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStatus" class="form-label">Estado</label>
+                            <select class="form-select" id="editStatus" required>
+                                <option value="0">Programada</option>
+                                <option value="1">Confirmada</option>
+                                <option value="2">Completada</option>
+                                <option value="3">Cancelada</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editNotes" class="form-label">Notas</label>
+                            <textarea class="form-control" id="editNotes" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="detailsAppointmentModal" tabindex="-1" aria-labelledby="detailsAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsAppointmentModalLabel">Detalles de la Cita</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>ID:</strong> <span id="detailsAppointmentId"></span></p>
+                    <p><strong>Doctor:</strong> <span id="detailsDoctorName"></span></p>
+                    <p><strong>Paciente:</strong> <span id="detailsPatientName"></span></p>
+                    <p><strong>Institución:</strong> <span id="detailsInstitutionName"></span></p>
+                    <p><strong>Fecha Cita:</strong> <span id="detailsAppointmentDate"></span></p>
+                    <p><strong>Estado:</strong> <span id="detailsStatus"></span></p>
+                    <p><strong>Notas:</strong> <span id="detailsNotes"></span></p>
+                    <p><strong>Creado Por:</strong> <span id="detailsCreatedBy"></span></p>
+                    <p><strong>Creado En:</strong> <span id="detailsCreatedAt"></span></p>
+                    <p><strong>Modificado Por:</strong> <span id="detailsModifiedBy"></span></p>
+                    <p><strong>Modificado En:</strong> <span id="detailsModifiedAt"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastHeader"></strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/appointments.js" asp-append-version="true"></script>
+}

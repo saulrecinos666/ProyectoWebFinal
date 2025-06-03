@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ProyectoFinal.Controllers.Chats
+namespace ProyectoFinal.Controllers.Patients
 {
-    public class ChatController : Controller 
+    public class PatientUIController : Controller
     {
         [Authorize]
         public IActionResult Index()

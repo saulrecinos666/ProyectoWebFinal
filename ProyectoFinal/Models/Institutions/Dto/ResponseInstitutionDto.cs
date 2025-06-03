@@ -4,6 +4,7 @@ namespace ProyectoFinal.Models.Institutions.Dto
 {
     public class ResponseInstitutionDto
     {
+        public int InstitutionId { get; set; }
         public string Name { get; set; } = null!;
         public string Address { get; set; } = null!;
         public string DistrictName { get; set; } = null!;

@@ -27,6 +27,7 @@ namespace ProyectoFinal.Controllers.Specialties
             var specialties = await _context.Specialties
                 .Select(s => new ResponseSpecialtyDto 
                 {
+                    SpecialtyId = s.SpecialtyId,
                     Name = s.Name,
                     Description = s.Description
                 })               

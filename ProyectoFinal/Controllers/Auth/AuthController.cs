@@ -8,6 +8,8 @@ using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authentication; // ¡NUEVO USING!
+using Microsoft.AspNetCore.Authentication.Cookies; // ¡NUEVO USING!
 
 namespace ProyectoFinal.Controllers.Auth
 {
@@ -21,9 +23,9 @@ namespace ProyectoFinal.Controllers.Auth
         private readonly IPasswordHasher<User> _passwordHasher;
 
         public AuthController(
-            DbCitasMedicasContext context, 
-            IConnectionMultiplexer redis, 
-            IConfiguration configuration, 
+            DbCitasMedicasContext context,
+            IConnectionMultiplexer redis,
+            IConfiguration configuration,
             IPasswordHasher<User> passwordHasher)
         {
             _context = context;
@@ -39,13 +41,32 @@ namespace ProyectoFinal.Controllers.Auth
             if (user == null || _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password) == PasswordVerificationResult.Failed)
                 return Unauthorized(new
                 {
-                    Messagge = "Credenciales incorrectas."
+                    Message = "Credenciales incorrectas."
                 });
 
-            var token = GenerateJwtToken(user);
+            var token = GenerateJwtToken(user); // Genera el JWT
 
             var redisDb = _redis.GetDatabase();
             await redisDb.StringSetAsync($"JWT_{user.UserId}", token, TimeSpan.FromMinutes(int.Parse(_configuration["JwtSettings:ExpiresInMinutes"])));
+
+            // *** AÑADIR ESTO: INICIAR SESIÓN BASADA EN COOKIES ***
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Email, user.Email)
+                // Puedes añadir más claims aquí si los necesitas para la cookie
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true, // Si quieres que la cookie persista entre sesiones del navegador (para "Recordarme")
+                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:ExpiresInMinutes"]))
+            };
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+            // **********************************************************
 
             return Ok(new
             {
@@ -55,7 +76,7 @@ namespace ProyectoFinal.Controllers.Auth
         }
 
         [HttpPost("logout")]
-        [Authorize]
+        [Authorize] // Esta acción requiere que el usuario esté autenticado (por cookie o JWT) para ejecutar el logout.
         public async Task<IActionResult> Logout()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -69,8 +90,12 @@ namespace ProyectoFinal.Controllers.Auth
             if (!deleted)
                 return NotFound(new
                 {
-                    Message = "No se encontró sesión activa para este usuario."
+                    Message = "No se encontró sesión activa para este usuario en Redis."
                 });
+
+            // *** AÑADIR ESTO: CERRAR SESIÓN BASADA EN COOKIES ***
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            // **************************************************
 
             return Ok(new
             {

@@ -1,0 +1,130 @@
+﻿@{
+    ViewData["Title"] = "Gestión de Especialidades";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tags me-2"></i>Gestión de Especialidades</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSpecialtyModal">
+            <i class="fas fa-plus-circle me-1"></i> Nueva Especialidad
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-striped" id="specialtiesTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal fade" id="createSpecialtyModal" tabindex="-1" aria-labelledby="createSpecialtyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createSpecialtyModalLabel">Añadir Nueva Especialidad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createSpecialtyForm">
+                        <div class="mb-3">
+                            <label for="createName" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="createName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createDescription" class="form-label">Descripción (Opcional)</label>
+                            <textarea class="form-control" id="createDescription" rows="3"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn btn-primary">Guardar Especialidad</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editSpecialtyModal" tabindex="-1" aria-labelledby="editSpecialtyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editSpecialtyModalLabel">Editar Especialidad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editSpecialtyForm">
+                        <input type="hidden" id="editSpecialtyId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Descripción (Opcional)</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editIsActive" class="form-label">Estado</label>
+                            <select class="form-select" id="editIsActive" required>
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="detailsSpecialtyModal" tabindex="-1" aria-labelledby="detailsSpecialtyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsSpecialtyModalLabel">Detalles de la Especialidad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>ID:</strong> <span id="detailsSpecialtyId"></span></p>
+                    <p><strong>Nombre:</strong> <span id="detailsName"></span></p>
+                    <p><strong>Descripción:</strong> <span id="detailsDescription"></span></p>
+                    <p><strong>Estado:</strong> <span id="detailsIsActive"></span></p>
+                    <p><strong>Creado Por:</strong> <span id="detailsCreatedBy"></span></p>
+                    <p><strong>Creado En:</strong> <span id="detailsCreatedAt"></span></p>
+                    <p><strong>Modificado Por:</strong> <span id="detailsModifiedBy"></span></p>
+                    <p><strong>Modificado En:</strong> <span id="detailsModifiedAt"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastHeader"></strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/specialties.js" asp-append-version="true"></script>
+}

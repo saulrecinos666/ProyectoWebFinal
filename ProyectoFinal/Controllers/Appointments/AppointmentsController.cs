@@ -76,19 +76,18 @@ namespace ProyectoFinal.Controllers.Appointments
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentDto createAppointmentDto)
+        public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentDto appointmentData)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var appointment = new Appointment
             {
-                UserId = createAppointmentDto.UserId,
-                DoctorId = createAppointmentDto.DoctorId,
-                PatientId = createAppointmentDto.PatientId,
-                InstitutionId = createAppointmentDto.InstitutionId,
-                AppointmentDate = createAppointmentDto.AppointmentDate,
-                Status = createAppointmentDto.Status,
-                Notes = createAppointmentDto.Notes,
+                DoctorId = appointmentData.DoctorId,
+                PatientId = appointmentData.PatientId,
+                InstitutionId = appointmentData.InstitutionId,
+                AppointmentDate = appointmentData.AppointmentDate,
+                Status = appointmentData.Status,
+                Notes = appointmentData.Notes,
                 IsActive = true,
                 CreatedBy = GetUserId(),
                 CreatedAt = DateTime.Now

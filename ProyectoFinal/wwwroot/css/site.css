@@ -1,48 +1,80 @@
+/* Limpia las reglas conflictivas existentes y define el sticky footer con Flexbox */
 html {
-  font-size: 14px;
+    font-size: 14px;
+    /* ELIMINA estas líneas si existían: */
+    /* position: relative; */
+    /* min-height: 100%; */
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+/* ------------------------------------------------------------- */
+/* ESTILOS PARA EL STICKY FOOTER CON FLEXBOX - ¡ESTOS SON CRÍTICOS! */
+/* DEBEN IR AQUÍ PARA ASEGURAR QUE SE APLICAN CORRECTAMENTE */
+html, body {
+    height: 100%; /* El html y body deben ocupar el 100% de la altura del viewport */
+    margin: 0; /* Elimina cualquier margen predeterminado del body */
+    display: flex; /* Habilita Flexbox en el body */
+    flex-direction: column; /* Apila los elementos hijos en una columna: header, div.container, footer */
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+header {
+    flex-shrink: 0; /* Asegura que el header no se encoja */
 }
 
-body {
-  margin-bottom: 60px;
+.container {
+    /* La navbar es fixed-top, así que el padding-top es necesario para evitar solapamiento */
+    padding-top: 90px; /* Ajusta según la altura de tu navbar si es diferente */
+    flex-grow: 1; /* ¡Esto es clave! Permite que el contenedor principal crezca y ocupe todo el espacio disponible */
+    display: flex; /* Conviértelo también en un contenedor flex para su contenido interno (main) */
+    flex-direction: column; /* Organiza el contenido interno (.container > main) en columna */
 }
 
-/* Estilos para el contenedor principal del widget de chat */
+main {
+    flex-grow: 1; /* ¡Esto es clave! Permite que el área de contenido principal crezca y llene el espacio restante */
+    padding-bottom: 120px; /* AUMENTA ESTE VALOR. Da un espacio generoso para que el footer no se superponga con el último contenido. Puedes probar con 80px, 100px, 120px... */
+    /* Esto es especialmente importante si el contenido es corto. */
+}
+
+footer {
+    flex-shrink: 0; /* Asegura que el footer no se encoja */
+    margin-top: auto; /* Empuja el footer a la parte inferior si el contenido es muy corto */
+    /* El background-color y text-color ya los tienes en _Layout.cshtml, así que no es necesario aquí */
+}
+
+/* ------------------------------------------------------------- */
+
+
+/* **Importante:** Verifica que no tengas otra regla de 'body { margin-bottom: ... }'
+   en tu site.css o en otro archivo que pueda estar cargándose después. */
+/* Si existiera, ELIMÍNALA. */
+
+/* Resto de tus estilos del site.css (chat, hero, especialidades, testimonios, etc.) */
+/* Asegúrate de que los estilos del chat flotante no tengan un z-index menor que el footer si este último fuera fixed */
 #chat-widget-container {
-    position: fixed; /* Lo fija en la ventana */
-    bottom: 20px; /* 20px desde la parte inferior */
-    right: 20px; /* 20px desde la derecha */
-    width: 320px; /* Ancho del chat */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1000; /* Asegura que esté por encima de otros elementos */
-    overflow: hidden; /* Oculta el contenido extra cuando está cerrado */
-    transition: height 0.3s ease-in-out, width 0.3s ease-in-out; /* Animación de apertura/cierre */
+    z-index: 1050; /* Aumenta el z-index para asegurar que esté sobre el footer si el footer también es fixed */
+    overflow: hidden;
+    transition: height 0.3s ease-in-out, width 0.3s ease-in-out;
 }
 
-/* Estilo para el encabezado del chat */
 #chat-header {
     background-color: #007bff;
     color: white;
     padding: 10px 15px;
     border-bottom: 1px solid #0056b3;
-    cursor: pointer; /* Para indicar que es clickeable */
+    cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -64,50 +96,250 @@ body {
         cursor: pointer;
     }
 
-/* Contenido del chat (input, botón, área de mensajes) */
 #chat-content {
     padding: 15px;
-    display: flex; /* Para organizar input y botón */
+    display: flex;
     flex-direction: column;
-    height: 380px; /* Altura para el contenido del chat */
+    height: 380px;
 }
 
     #chat-content .input-group {
-        margin-bottom: 10px; /* Espacio debajo del input/botón */
+        margin-bottom: 10px;
     }
 
     #chat-content #chat {
-        flex-grow: 1; /* Ocupa el espacio restante */
+        flex-grow: 1;
         border: 1px solid #dee2e6;
         border-radius: 5px;
         padding: 10px;
         background-color: #f8f9fa;
-        margin-top: 5px; /* Espacio entre el input y el área de chat */
+        margin-top: 5px;
     }
 
-/* Clases para manejar el estado abierto/cerrado */
 .chat-closed {
-    height: 50px; /* Altura cuando está cerrado (solo el header) */
+    height: 50px;
     width: 320px;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
 }
 
     .chat-closed #chat-content {
-        display: none; /* Oculta el contenido cuando está cerrado */
+        display: none;
     }
 
 .chat-open {
-    height: 450px; /* Altura cuando está abierto (header + content) */
-    width: 350px; /* Puedes ajustarlo si el contenido lo requiere */
+    height: 450px;
+    width: 350px;
 }
 
-/* Estilo para el icono de Font Awesome */
 .fas.fa-chevron-up {
     transform: rotate(0deg);
     transition: transform 0.3s ease;
 }
 
 .chat-closed .fas.fa-chevron-up {
-    transform: rotate(180deg); /* Rota el icono hacia abajo cuando está cerrado */
+    transform: rotate(180deg);
 }
+
+/* Estilos para la sección Hero (de la página de citas médicas) */
+.hero-section {
+    background: linear-gradient(to right, #007bff, #0056b3); /* Azul gradiente */
+    color: white;
+    padding: 80px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+    .hero-section h1 {
+        font-size: 3.5em;
+        font-weight: 700;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-section p {
+        font-size: 1.3em;
+        max-width: 800px;
+        margin: 0 auto 30px auto;
+    }
+
+.custom-button-hero {
+    background-color: #28a745; /* Verde */
+    border-color: #28a745;
+    color: white;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border-radius: 50px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+    .custom-button-hero:hover {
+        background-color: #218838;
+        border-color: #218838;
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+/* Colores para la paleta */
+:root {
+    --primary-blue: #007bff;
+    --dark-blue: #0056b3;
+    --light-blue: #e0f2f7;
+    --accent-blue: #17a2b8;
+    --green-success: #28a745;
+    --text-dark: #343a40;
+    --text-light: #6c757d;
+}
+
+/* Estilos de la sección "Cómo Funciona" */
+.how-it-works-section {
+    background-color: var(--light-blue);
+    padding: 60px 0;
+}
+
+    .how-it-works-section h2 {
+        color: var(--primary-blue);
+        font-weight: 600;
+    }
+
+    .how-it-works-section .icon-box {
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .how-it-works-section .icon-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .how-it-works-section .icon-box i {
+            color: var(--accent-blue);
+            margin-bottom: 15px;
+        }
+
+        .how-it-works-section .icon-box h4 {
+            color: var(--dark-blue);
+            font-weight: 600;
+        }
+
+/* Estilos de la sección de especialidades */
+.specialties-section {
+    padding: 60px 0;
+    background-color: #fff;
+}
+
+    .specialties-section h2 {
+        color: var(--primary-blue);
+        font-weight: 600;
+    }
+
+.specialty-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .specialty-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+
+    .specialty-card .card-body {
+        padding: 30px 20px;
+    }
+
+    .specialty-card i {
+        color: var(--accent-blue);
+        margin-bottom: 10px;
+    }
+
+    .specialty-card .card-title {
+        color: var(--dark-blue);
+        font-weight: 600;
+    }
+
+.custom-outline-button {
+    color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-radius: 50px;
+    padding: 10px 25px;
+}
+
+    .custom-outline-button:hover {
+        background-color: var(--primary-blue);
+        color: white;
+    }
+
+/* Estilos de testimonios */
+.testimonials-section {
+    background-color: var(--light-blue);
+    padding: 60px 0;
+}
+
+    .testimonials-section h2 {
+        color: var(--primary-blue);
+        font-weight: 600;
+    }
+
+.testimonial-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background-color: #fff;
+}
+
+    .testimonial-card .card-body {
+        padding: 25px;
+    }
+
+    .testimonial-card .card-text {
+        font-style: italic;
+        color: var(--text-dark);
+        margin-bottom: 15px;
+    }
+
+.blockquote-footer {
+    font-size: 0.9em;
+    color: var(--text-light);
+}
+
+/* Estilos de la sección final de call to action */
+.call-to-action-final {
+    background: linear-gradient(to right, #28a745, #218838); /* Verde gradiente */
+    color: white;
+    padding: 80px 0;
+}
+
+    .call-to-action-final h2 {
+        font-size: 2.8em;
+        font-weight: 700;
+    }
+
+    .call-to-action-final p {
+        font-size: 1.2em;
+        max-width: 700px;
+        margin: 0 auto 30px auto;
+    }
+
+.custom-button-white {
+    background-color: white;
+    border-color: white;
+    color: var(--green-success);
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border-radius: 50px;
+    transition: background-color 0.3s ease, transform 0.3s ease, color 0.3s ease;
+}
+
+    .custom-button-white:hover {
+        background-color: #f8f9fa;
+        border-color: #f8f9fa;
+        color: var(--dark-blue);
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }

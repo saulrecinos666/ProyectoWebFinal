@@ -27,6 +27,7 @@ namespace ProyectoFinal.Controllers.Institutions
                 .Include(i => i.District)
                 .Select(i => new ResponseInstitutionDto 
                 {
+                    InstitutionId = i.InstitutionId,
                     Name = i.Name,
                     Address = i.Address,
                     DistrictName = i.District != null ? i.District.DistrictName : "NA",

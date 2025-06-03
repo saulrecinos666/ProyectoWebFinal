@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Users;
@@ -73,6 +72,15 @@ namespace ProyectoFinal.Controllers.Users
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto createUserDto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            if (await _context.Users.AnyAsync(u => u.Username == createUserDto.Username))
+            {
+                return Conflict(new { Message = "El nombre de usuario ya está en uso." });
+            }
+            if (await _context.Users.AnyAsync(u => u.Email == createUserDto.Email))
+            {
+                return Conflict(new { Message = "El correo electrónico ya está registrado." });
+            }
 
             var user = new User
             {

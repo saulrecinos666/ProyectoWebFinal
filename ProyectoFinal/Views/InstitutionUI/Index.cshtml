@@ -1,0 +1,168 @@
+﻿@{
+    ViewData["Title"] = "Gestión de Instituciones";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-hospital me-2"></i>Gestión de Instituciones</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createInstitutionModal">
+            <i class="fas fa-plus-circle me-1"></i> Nueva Institución
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-striped" id="institutionsTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Dirección</th>
+                    <th>Distrito</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal fade" id="createInstitutionModal" tabindex="-1" aria-labelledby="createInstitutionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createInstitutionModalLabel">Añadir Nueva Institución</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createInstitutionForm">
+                        <div class="mb-3">
+                            <label for="createName" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="createName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createAddress" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="createAddress" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="createDistrictCode" class="form-label">Distrito</label>
+                                <select class="form-select" id="createDistrictCode" required>
+                                    <option value="">Cargando...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="createEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="createEmail" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createPhone" class="form-label">Teléfono (Opcional)</label>
+                            <input type="tel" class="form-control" id="createPhone" placeholder="Ej. 0000-0000">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn btn-primary">Guardar Institución</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editInstitutionModal" tabindex="-1" aria-labelledby="editInstitutionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editInstitutionModalLabel">Editar Institución</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editInstitutionForm">
+                        <input type="hidden" id="editInstitutionId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAddress" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="editAddress" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editDistrictCode" class="form-label">Distrito</label>
+                                <select class="form-select" id="editDistrictCode" required>
+                                    <option value="">Cargando...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="editEmail" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPhone" class="form-label">Teléfono (Opcional)</label>
+                            <input type="tel" class="form-control" id="editPhone" placeholder="Ej. 0000-0000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editIsActive" class="form-label">Estado</label>
+                            <select class="form-select" id="editIsActive" required>
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="detailsInstitutionModal" tabindex="-1" aria-labelledby="detailsInstitutionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsInstitutionModalLabel">Detalles de la Institución</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>ID:</strong> <span id="detailsInstitutionId"></span></p>
+                    <p><strong>Nombre:</strong> <span id="detailsName"></span></p>
+                    <p><strong>Dirección:</strong> <span id="detailsAddress"></span></p>
+                    <p><strong>Distrito:</strong> <span id="detailsDistrict"></span></p>
+                    <p><strong>Email:</strong> <span id="detailsEmail"></span></p>
+                    <p><strong>Teléfono:</strong> <span id="detailsPhone"></span></p>
+                    <p><strong>Estado:</strong> <span id="detailsIsActive"></span></p>
+                    <p><strong>Creado Por:</strong> <span id="detailsCreatedBy"></span></p>
+                    <p><strong>Creado En:</strong> <span id="detailsCreatedAt"></span></p>
+                    <p><strong>Modificado Por:</strong> <span id="detailsModifiedBy"></span></p>
+                    <p><strong>Modificado En:</strong> <span id="detailsModifiedAt"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastHeader"></strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/institutions.js" asp-append-version="true"></script>
+}

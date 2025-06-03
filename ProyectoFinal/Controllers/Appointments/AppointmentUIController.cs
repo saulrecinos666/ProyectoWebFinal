@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ProyectoFinal.Controllers.Chats
+namespace ProyectoFinal.Controllers.Appointments
 {
-    public class ChatController : Controller 
+    public class AppointmentUIController : Controller
     {
         [Authorize]
         public IActionResult Index()

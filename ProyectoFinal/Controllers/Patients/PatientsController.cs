@@ -26,6 +26,7 @@ namespace ProyectoFinal.Controllers.Patients
             var patients = await _context.Patients
                 .Select(p => new ResponsePatientDto 
                 {
+                    PatientId = p.PatientId,
                     FirstName = p.FirstName,
                     MiddleName = p.MiddleName,
                     LastName = p.LastName,

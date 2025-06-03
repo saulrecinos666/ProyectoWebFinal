@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Citas Médicas Online</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ProyectoFinal.styles.css" asp-append-version="true" />
+    @* Agregamos Font Awesome aquí para iconos en el formulario de login *@
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEbFlcgUjRx6C/VRDq/X2gI" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Estilos específicos para el layout de login/registro */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Asegura que ocupe al menos toda la altura de la ventana */
+            background-color: #f0f2f5; /* Un color de fondo suave para la página de login */
+            justify-content: center; /* Centrar el contenido verticalmente */
+            align-items: center; /* Centrar el contenido horizontalmente */
+        }
+
+        main {
+            flex-grow: 1; /* Permite que el contenido principal ocupe el espacio restante */
+            display: flex; /* Para centrar el formulario de login dentro del main */
+            align-items: center; /* Centrado vertical */
+            justify-content: center; /* Centrado horizontal */
+            width: 100%; /* Asegura que main ocupe todo el ancho disponible */
+        }
+
+        .login-card-container {
+            max-width: 400px; /* Ancho máximo para el formulario de login */
+            width: 90%; /* Ancho responsivo */
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    @* No hay header (navbar) ni footer en este layout *@
+
+    <div class="container d-flex flex-grow-1 align-items-center justify-content-center">
+        <main role="main" class="pb-3">
+            <div class="login-card-container">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

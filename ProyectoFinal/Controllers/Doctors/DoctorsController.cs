@@ -28,6 +28,7 @@ namespace ProyectoFinal.Controllers.Doctors
                 .Include(d => d.Institution)
                 .Select(d => new ResponseDoctorDto
                 {
+                    DoctorId = d.DoctorId,
                     FirstName = d.FirstName,
                     LastName = d.LastName,
                     MiddleName = d.MiddleName,

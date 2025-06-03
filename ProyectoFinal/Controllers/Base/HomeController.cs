@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoFinal.Models.Base; 
 
@@ -15,12 +16,20 @@ namespace ProyectoFinal.Controllers.Base
             _context = context;
         }
 
+        [AllowAnonymous]
         public IActionResult Index()
         {
             return RedirectToAction("Login", "Home");
         }
 
+        [AllowAnonymous]
         public IActionResult Login()
+        {
+            return View();
+        }
+
+        [AllowAnonymous]
+        public IActionResult Register()
         {
             return View();
         }
