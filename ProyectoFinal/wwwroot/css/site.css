@@ -20,3 +20,94 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* Estilos para el contenedor principal del widget de chat */
+#chat-widget-container {
+    position: fixed; /* Lo fija en la ventana */
+    bottom: 20px; /* 20px desde la parte inferior */
+    right: 20px; /* 20px desde la derecha */
+    width: 320px; /* Ancho del chat */
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000; /* Asegura que esté por encima de otros elementos */
+    overflow: hidden; /* Oculta el contenido extra cuando está cerrado */
+    transition: height 0.3s ease-in-out, width 0.3s ease-in-out; /* Animación de apertura/cierre */
+}
+
+/* Estilo para el encabezado del chat */
+#chat-header {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-bottom: 1px solid #0056b3;
+    cursor: pointer; /* Para indicar que es clickeable */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+    #chat-header #loggedInUsernameDisplay {
+        margin: 0;
+        font-size: 0.95em;
+        font-weight: bold;
+    }
+
+    #chat-header button {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.2em;
+        cursor: pointer;
+    }
+
+/* Contenido del chat (input, botón, área de mensajes) */
+#chat-content {
+    padding: 15px;
+    display: flex; /* Para organizar input y botón */
+    flex-direction: column;
+    height: 380px; /* Altura para el contenido del chat */
+}
+
+    #chat-content .input-group {
+        margin-bottom: 10px; /* Espacio debajo del input/botón */
+    }
+
+    #chat-content #chat {
+        flex-grow: 1; /* Ocupa el espacio restante */
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        margin-top: 5px; /* Espacio entre el input y el área de chat */
+    }
+
+/* Clases para manejar el estado abierto/cerrado */
+.chat-closed {
+    height: 50px; /* Altura cuando está cerrado (solo el header) */
+    width: 320px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+    .chat-closed #chat-content {
+        display: none; /* Oculta el contenido cuando está cerrado */
+    }
+
+.chat-open {
+    height: 450px; /* Altura cuando está abierto (header + content) */
+    width: 350px; /* Puedes ajustarlo si el contenido lo requiere */
+}
+
+/* Estilo para el icono de Font Awesome */
+.fas.fa-chevron-up {
+    transform: rotate(0deg);
+    transition: transform 0.3s ease;
+}
+
+.chat-closed .fas.fa-chevron-up {
+    transform: rotate(180deg); /* Rota el icono hacia abajo cuando está cerrado */
+}
