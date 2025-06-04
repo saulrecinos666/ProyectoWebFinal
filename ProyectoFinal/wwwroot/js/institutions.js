@@ -291,7 +291,6 @@
             editDistrictSelect.value = institution.districtCode ? institution.districtCode.toString() : ''; // Asumo districtCode en el DTO
             document.getElementById('editEmail').value = institution.email || '';
             document.getElementById('editPhone').value = institution.phone || '';
-            editIsActiveSelect.value = institution.isActive ? 'true' : 'false'; // Necesitas que IsActive venga del backend para el GET por ID
 
             editInstitutionModal.show();
         } catch (error) {
@@ -313,10 +312,9 @@
         const newInstitution = {
             name: document.getElementById('createName').value,
             address: document.getElementById('createAddress').value,
-            districtCode: parseInt(createDistrictSelect.value), // Asegúrate de que el DistrictCode sea un número
+            districtCode: createDistrictSelect.value,
             email: document.getElementById('createEmail').value,
             phone: document.getElementById('createPhone').value || null
-            // IsActive se establece a true por defecto en el controlador
         };
 
         if (!newInstitution.name || !newInstitution.address || isNaN(newInstitution.districtCode) || !newInstitution.email) {
@@ -360,13 +358,9 @@
         const updatedInstitution = {
             name: document.getElementById('editName').value,
             address: document.getElementById('editAddress').value,
-            districtCode: parseInt(editDistrictSelect.value),
+            districtCode: editDistrictSelect.value, 
             email: document.getElementById('editEmail').value,
             phone: document.getElementById('editPhone').value || null,
-            // IsActive se envía para PUT, aunque tu controlador no lo usa en UpdateInstitutionDto
-            // Si el PUT debe actualizar IsActive, tu UpdateInstitutionDto debe incluirlo.
-            // Por ahora, se envía pero el backend lo ignorará a menos que lo cambies.
-            isActive: editIsActiveSelect.value === 'true'
         };
 
         if (!updatedInstitution.name || !updatedInstitution.address || isNaN(updatedInstitution.districtCode) || !updatedInstitution.email) {

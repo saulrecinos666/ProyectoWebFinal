@@ -173,7 +173,7 @@
             document.getElementById('detailsSpecialtyId').textContent = specialty.specialtyId || 'N/A';
             document.getElementById('detailsName').textContent = specialty.name || 'N/A';
             document.getElementById('detailsDescription').textContent = specialty.description || 'N/A';
-            document.getElementById('detailsIsActive').textContent = getStatusText(specialty.isActive); // Necesitas que IsActive venga
+            document.getElementById('detailsIsActive').textContent = getStatusText(specialty.isActive);
             document.getElementById('detailsCreatedBy').textContent = specialty.createdBy || 'N/A';
             document.getElementById('detailsCreatedAt').textContent = formatDate(specialty.createdAt);
             document.getElementById('detailsModifiedBy').textContent = specialty.modifiedBy || 'N/A';
@@ -206,7 +206,6 @@
             document.getElementById('editSpecialtyId').value = id; // El ID ya lo tenemos
             document.getElementById('editName').value = specialty.name || '';
             document.getElementById('editDescription').value = specialty.description || '';
-            editIsActiveSelect.value = specialty.isActive ? 'true' : 'false'; // Necesitas que IsActive venga del backend para el GET por ID
 
             editSpecialtyModal.show();
         } catch (error) {
@@ -271,8 +270,7 @@
         const id = document.getElementById('editSpecialtyId').value;
         const updatedSpecialty = {
             name: document.getElementById('editName').value,
-            description: document.getElementById('editDescription').value || null,
-            isActive: editIsActiveSelect.value === 'true' // Se envía el estado aunque el controlador no lo use en UpdateSpecialtyDto
+            description: document.getElementById('editDescription').value || null
         };
 
         if (!updatedSpecialty.name) {

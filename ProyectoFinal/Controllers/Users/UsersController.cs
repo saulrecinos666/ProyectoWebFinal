@@ -29,8 +29,10 @@ namespace ProyectoFinal.Controllers.Users
             var users = await _context.Users
                 .Select(user => new ResponseUserDto
                 {
+                    UserId = user.UserId,
                     Username = user.Username,
                     Email = user.Email,
+                    IsActive = user.IsActive,
                     CreatedBy = user.CreatedBy,
                     CreatedAt = user.CreatedAt,
                     ModifiedBy = user.ModifiedBy, 
@@ -56,8 +58,10 @@ namespace ProyectoFinal.Controllers.Users
 
             var userDto = new ResponseUserDto
             {
+                UserId = user.UserId,
                 Username = user.Username,
                 Email = user.Email,
+                IsActive = user.IsActive,
                 CreatedBy = user.CreatedBy,
                 CreatedAt = user.CreatedAt,
                 ModifiedBy = user.ModifiedBy,
@@ -101,8 +105,7 @@ namespace ProyectoFinal.Controllers.Users
             var responseDto = new CreatedUserDto
             {
                 Username = user.Username,
-                Email = user.Email,
-                CreatedAt = user.CreatedAt
+                Email = user.Email
             };
 
             return CreatedAtAction(nameof(GetUserById), new { id = user.UserId }, responseDto);
@@ -152,6 +155,25 @@ namespace ProyectoFinal.Controllers.Users
 
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        [HttpGet("byUsername")]
+        public async Task<IActionResult> GetUserByUsername([FromQuery] string username)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                return BadRequest(new { message = "El nombre de usuario no puede estar vacío." });
+            }
+
+            var user = await _context.Users
+                                     .FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null)
+            {
+                return NotFound(new { message = $"Usuario '{username}' no encontrado." });
+            }
+
+            return Ok(new { UserId = user.UserId, Username = user.Username });
         }
     }
 }

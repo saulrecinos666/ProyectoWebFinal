@@ -12,6 +12,7 @@
         public string? Phone { get; set; }
         public string SpecialtyName { get; set; } = null!;
         public string InstitutionName { get; set; } = null!;
+        public bool IsActive { get; set; }
         public int CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public int? ModifiedBy { get; set; }

@@ -1,7 +1,5 @@
 ﻿using StackExchange.Redis;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authentication; // Necesario para HttpContext.AuthenticateAsync
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer; // Necesario para CookieAuthenticationDefaults
 

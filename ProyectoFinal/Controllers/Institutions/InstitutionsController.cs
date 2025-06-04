@@ -33,6 +33,7 @@ namespace ProyectoFinal.Controllers.Institutions
                     DistrictName = i.District != null ? i.District.DistrictName : "NA",
                     Email = i.Email,
                     Phone = i.Phone,
+                    IsActive = i.IsActive,
                     CreatedBy = i.CreatedBy,
                     CreatedAt = i.CreatedAt,
                     ModifiedBy = i.ModifiedBy,
@@ -55,11 +56,13 @@ namespace ProyectoFinal.Controllers.Institutions
 
             var institutionDto = new ResponseInstitutionDto
             {
+                InstitutionId = institution.InstitutionId,
                 Name = institution.Name,
                 Address = institution.Address,
                 DistrictName = institution.District != null ? institution.District.DistrictName : "NA",
                 Email = institution.Email,
                 Phone = institution.Phone,
+                IsActive = institution.IsActive,
                 CreatedBy = institution.CreatedBy,
                 CreatedAt = institution.CreatedAt,
                 ModifiedBy = institution.ModifiedBy,

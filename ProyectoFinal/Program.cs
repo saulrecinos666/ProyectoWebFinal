@@ -8,8 +8,7 @@ using ProyectoFinal.Models.Users;
 using StackExchange.Redis;
 using ProyectoFinal.Hubs;
 using System.Text;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authentication.Cookies; // ¡NUEVO USING!
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -115,7 +114,6 @@ app.UseAuthorization();  // Debe venir después de UseAuthentication
 // Ahora se ejecutará *después* de que UseAuthentication haya intentado autenticar
 // por cookies o JWT.
 app.UseMiddleware<TokenValidationMiddleware>();
-
 
 app.MapHub<ChatHub>("/chathub");
 

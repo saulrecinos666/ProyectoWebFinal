@@ -38,6 +38,7 @@ namespace ProyectoFinal.Controllers.Doctors
                     Phone = d.Phone,
                     SpecialtyName = d.Specialty != null ? d.Specialty.Name : "NA",
                     InstitutionName = d.Institution != null ? d.Institution.Name : "NA",
+                    IsActive = d.IsActive,
                     CreatedBy = d.CreatedBy,
                     CreatedAt = d.CreatedAt,
                     ModifiedBy = d.ModifiedBy,
@@ -60,6 +61,7 @@ namespace ProyectoFinal.Controllers.Doctors
 
             var doctorDto = new ResponseDoctorDto
             {
+                DoctorId = doctor.DoctorId,
                 FirstName = doctor.FirstName,
                 LastName = doctor.LastName,
                 MiddleName = doctor.MiddleName,
@@ -69,6 +71,7 @@ namespace ProyectoFinal.Controllers.Doctors
                 Phone = doctor.Phone,
                 SpecialtyName = doctor.Specialty != null ? doctor.Specialty.Name : "NA",
                 InstitutionName = doctor.Institution != null ? doctor.Institution.Name : "NA",
+                IsActive = doctor.IsActive,
                 CreatedBy = doctor.CreatedBy,
                 CreatedAt = doctor.CreatedAt,
                 ModifiedBy = doctor.ModifiedBy,

@@ -6,6 +6,7 @@ using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Specialties;
 using ProyectoFinal.Models.Specialties.Dto;
+using ProyectoFinal.Models.Users;
 
 namespace ProyectoFinal.Controllers.Specialties
 {
@@ -29,7 +30,12 @@ namespace ProyectoFinal.Controllers.Specialties
                 {
                     SpecialtyId = s.SpecialtyId,
                     Name = s.Name,
-                    Description = s.Description
+                    Description = s.Description,
+                    IsActive = s.IsActive,
+                    CreatedBy = s.CreatedBy,
+                    CreatedAt = s.CreatedAt,
+                    ModifiedBy = s.ModifiedBy,
+                    ModifiedAt = s.ModifiedAt
                 })               
                 .ToListAsync();
 
@@ -46,8 +52,14 @@ namespace ProyectoFinal.Controllers.Specialties
 
             var specialtyDto = new ResponseSpecialtyDto
             {
+                SpecialtyId = specialty.SpecialtyId,
                 Name = specialty.Name,
-                Description = specialty.Description
+                Description = specialty.Description,
+                IsActive = specialty.IsActive,
+                CreatedBy = specialty.CreatedBy,
+                CreatedAt = specialty.CreatedAt,
+                ModifiedBy = specialty.ModifiedBy,
+                ModifiedAt = specialty.ModifiedAt
             };
 
             return Ok(specialtyDto);

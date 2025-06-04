@@ -8,8 +8,8 @@ using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.AspNetCore.Authentication; // ¡NUEVO USING!
-using Microsoft.AspNetCore.Authentication.Cookies; // ¡NUEVO USING!
+using Microsoft.AspNetCore.Authentication; 
+using Microsoft.AspNetCore.Authentication.Cookies; 
 
 namespace ProyectoFinal.Controllers.Auth
 {
@@ -66,7 +66,6 @@ namespace ProyectoFinal.Controllers.Auth
             };
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-            // **********************************************************
 
             return Ok(new
             {
@@ -95,7 +94,6 @@ namespace ProyectoFinal.Controllers.Auth
 
             // *** AÑADIR ESTO: CERRAR SESIÓN BASADA EN COOKIES ***
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            // **************************************************
 
             return Ok(new
             {

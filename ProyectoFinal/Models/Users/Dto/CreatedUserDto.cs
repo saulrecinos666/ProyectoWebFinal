@@ -12,7 +12,5 @@ namespace ProyectoFinal.Models.Users.Dto
         [StringLength(100, ErrorMessage = "El Correo no puede exceder los 100 caracteres.")]
         [DataType(DataType.EmailAddress)]
         public string Email { get; set; } = null!;
-
-        public DateTime CreatedAt { get; set; }
     }
 }

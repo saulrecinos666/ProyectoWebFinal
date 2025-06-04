@@ -5,6 +5,7 @@ using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Patients;
 using ProyectoFinal.Models.Patients.Dto;
+using ProyectoFinal.Models.Users;
 
 namespace ProyectoFinal.Controllers.Patients
 {
@@ -24,9 +25,11 @@ namespace ProyectoFinal.Controllers.Patients
         public async Task<IActionResult> GetAllPatients()
         {
             var patients = await _context.Patients
+                .Include(p => p.User)
                 .Select(p => new ResponsePatientDto 
                 {
                     PatientId = p.PatientId,
+                    UserName = p.User != null ? p.User.Username : "NA",
                     FirstName = p.FirstName,
                     MiddleName = p.MiddleName,
                     LastName = p.LastName,
@@ -37,6 +40,7 @@ namespace ProyectoFinal.Controllers.Patients
                     Phone = p.Phone,
                     Gender = p.Gender,
                     DateOfBirth = p.DateOfBirth,
+                    IsActive = p.IsActive,
                     CreatedBy = p.CreatedBy,
                     CreatedAt = p.CreatedAt,
                     ModifiedBy = p.ModifiedBy,
@@ -51,12 +55,15 @@ namespace ProyectoFinal.Controllers.Patients
         public async Task<IActionResult> GetPatientById(int id)
         {
             var patient = await _context.Patients
+                 .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.PatientId == id);
 
             if (patient == null) return NotFound();
 
             var patientDto = new ResponsePatientDto
             {
+                PatientId = patient.PatientId,
+                UserName = patient.User != null ? patient.User.Username : "NA",
                 FirstName = patient.FirstName,
                 MiddleName = patient.MiddleName,
                 LastName = patient.LastName,
@@ -67,6 +74,7 @@ namespace ProyectoFinal.Controllers.Patients
                 Phone = patient.Phone,
                 Gender = patient.Gender,
                 DateOfBirth = patient.DateOfBirth,
+                IsActive = patient.IsActive,
                 CreatedBy = patient.CreatedBy,
                 CreatedAt = patient.CreatedAt,
                 ModifiedBy = patient.ModifiedBy,
@@ -107,6 +115,7 @@ namespace ProyectoFinal.Controllers.Patients
 
             var responseDto = new ResponsePatientDto
             {
+                UserName = createdPatient.User != null ? createdPatient.User.Username : "NA",
                 FirstName = createdPatient.FirstName,
                 MiddleName = createdPatient.MiddleName,
                 LastName = createdPatient.LastName,
@@ -117,6 +126,7 @@ namespace ProyectoFinal.Controllers.Patients
                 Phone = createdPatient.Phone,
                 Gender = createdPatient.Gender,
                 DateOfBirth = createdPatient.DateOfBirth,
+                IsActive = createdPatient.IsActive,
                 CreatedAt = createdPatient.CreatedAt,
                 CreatedBy = createdPatient.CreatedBy
             };
@@ -132,6 +142,7 @@ namespace ProyectoFinal.Controllers.Patients
 
             if (existingPatient == null) return NotFound("Paciente no encontrado");
 
+            existingPatient.UserId = updatePatientDto.UserId;
             existingPatient.FirstName = updatePatientDto.FirstName;
             existingPatient.MiddleName = updatePatientDto.MiddleName;
             existingPatient.LastName = updatePatientDto.LastName;
@@ -157,9 +168,9 @@ namespace ProyectoFinal.Controllers.Patients
 
             if (patient == null) return NotFound();
 
+            patient.IsActive = false;
             patient.DeletedAt = DateTime.Now;
             patient.DeletedBy = GetUserId();
-            patient.IsActive = false;
 
             await _context.SaveChangesAsync();
             return NoContent();

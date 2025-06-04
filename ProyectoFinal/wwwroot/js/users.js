@@ -203,7 +203,6 @@
             document.getElementById('editUsername').value = user.username || '';
             document.getElementById('editEmail').value = user.email || '';
             // No se carga la contraseña por seguridad
-            editIsActiveSelect.value = user.isActive ? 'true' : 'false'; // Asumo IsActive viene del backend
 
             editUserModal.show();
         } catch (error) {
@@ -274,8 +273,7 @@
         const updatedUser = {
             username: document.getElementById('editUsername').value,
             email: document.getElementById('editEmail').value,
-            password: document.getElementById('editPassword').value || null, // Se envía null si está vacío
-            isActive: editIsActiveSelect.value === 'true' // Se envía el estado
+            password: document.getElementById('editPassword').value || null
         };
 
         // Validación básica

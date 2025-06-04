@@ -141,7 +141,7 @@
         createDoctorForm.reset();
 
         await Promise.all([
-            fetchAndPopulateSelect(API_SPECIALTIES_URL, createSpecialtySelect, 'specialtyId', ['specialtyName']),
+            fetchAndPopulateSelect(API_SPECIALTIES_URL, createSpecialtySelect, 'specialtyId', ['name']),
             fetchAndPopulateSelect(API_INSTITUTIONS_URL, createInstitutionSelect, 'institutionId', ['name'])
         ]).catch(error => {
             console.error("Error al cargar selects del modal de creación de doctor:", error);
@@ -152,7 +152,7 @@
     // Cargar selects para el modal de edición
     async function loadEditModalSelects() {
         await Promise.all([
-            fetchAndPopulateSelect(API_SPECIALTIES_URL, editSpecialtySelect, 'specialtyId', ['specialtyName']),
+            fetchAndPopulateSelect(API_SPECIALTIES_URL, editSpecialtySelect, 'specialtyId', ['name']),
             fetchAndPopulateSelect(API_INSTITUTIONS_URL, editInstitutionSelect, 'institutionId', ['name'])
         ]).catch(error => {
             console.error("Error al cargar selects del modal de edición de doctor:", error);
@@ -257,7 +257,6 @@
             document.getElementById('detailsPhone').textContent = doctor.phone || 'N/A';
             document.getElementById('detailsSpecialty').textContent = doctor.specialtyName || 'N/A';
             document.getElementById('detailsInstitution').textContent = doctor.institutionName || 'N/A';
-            document.getElementById('detailsIsActive').textContent = getStatusText(doctor.isActive);
             document.getElementById('detailsCreatedBy').textContent = doctor.createdBy || 'N/A';
             document.getElementById('detailsCreatedAt').textContent = formatDate(doctor.createdAt);
             document.getElementById('detailsModifiedBy').textContent = doctor.modifiedBy || 'N/A';
@@ -297,11 +296,8 @@
             document.getElementById('editDui').value = doctor.dui || '';
             document.getElementById('editEmail').value = doctor.email || '';
             document.getElementById('editPhone').value = doctor.phone || '';
-
-            // Asegúrate de que el select tiene la opción antes de intentar seleccionarla
             editSpecialtySelect.value = doctor.specialtyId ? doctor.specialtyId.toString() : '';
             editInstitutionSelect.value = doctor.institutionId ? doctor.institutionId.toString() : '';
-            editIsActiveSelect.value = doctor.isActive ? 'true' : 'false'; // 'true' o 'false' como strings
 
             editDoctorModal.show();
         } catch (error) {
@@ -329,8 +325,7 @@
             email: document.getElementById('createEmail').value,
             phone: document.getElementById('createPhone').value || null,
             specialtyId: parseInt(createSpecialtySelect.value),
-            institutionId: parseInt(createInstitutionSelect.value),
-            isActive: true // Por defecto, un nuevo doctor es activo
+            institutionId: parseInt(createInstitutionSelect.value)
         };
 
         if (!newDoctor.firstName || !newDoctor.lastName || !newDoctor.dui || !newDoctor.email || isNaN(newDoctor.specialtyId) || isNaN(newDoctor.institutionId)) {
@@ -381,8 +376,7 @@
             email: document.getElementById('editEmail').value,
             phone: document.getElementById('editPhone').value || null,
             specialtyId: parseInt(editSpecialtySelect.value),
-            institutionId: parseInt(editInstitutionSelect.value),
-            isActive: editIsActiveSelect.value === 'true' // Convertir a booleano
+            institutionId: parseInt(editInstitutionSelect.value)
         };
 
         if (!updatedDoctor.firstName || !updatedDoctor.lastName || !updatedDoctor.dui || !updatedDoctor.email || isNaN(updatedDoctor.specialtyId) || isNaN(updatedDoctor.institutionId)) {

@@ -13,9 +13,5 @@
         public DateTime AppointmentDate { get; set; }
         public AppointmentStatus Status { get; set; }
         public string? Notes { get; set; }
-        public int CreatedBy { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public int? ModifiedBy { get; set; }
-        public DateTime? ModifiedAt { get; set; }
     }
 }
