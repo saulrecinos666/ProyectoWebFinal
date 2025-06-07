@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ProyectoFinal.Controllers.Users
 {
+    [Authorize(Policy = "CanManageUsers")]
     public class UserUIController : Controller
     {
         [Authorize]

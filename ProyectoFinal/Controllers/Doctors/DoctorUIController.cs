@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ProyectoFinal.Controllers.Doctors
 {
+    [Authorize(Policy = "CanManageDoctors")]
     public class DoctorUIController : Controller
     {
         [Authorize]

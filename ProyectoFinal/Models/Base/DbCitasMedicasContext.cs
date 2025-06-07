@@ -7,6 +7,7 @@ using ProyectoFinal.Models.Institutions;
 using ProyectoFinal.Models.Municipalities;
 using ProyectoFinal.Models.Patients;
 using ProyectoFinal.Models.Permissions;
+using ProyectoFinal.Models.Roles; // ¡NUEVO! Agrega este using
 using ProyectoFinal.Models.Specialties;
 using ProyectoFinal.Models.Users;
 using System.Linq.Expressions;
@@ -40,13 +41,19 @@ public partial class DbCitasMedicasContext : DbContext
 
     public virtual DbSet<Permission> Permissions { get; set; }
 
+    // ¡NUEVOS DBSETS!
+    public virtual DbSet<Role> Roles { get; set; }
+    public virtual DbSet<UserRole> UserRoles { get; set; }
+    public virtual DbSet<RolePermission> RolePermissions { get; set; }
+
     public virtual DbSet<Specialty> Specialties { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserLoginHistory> UserLoginHistories { get; set; }
 
-    public virtual DbSet<UserPermission> UserPermissions { get; set; }
+    public virtual DbSet<UserPermission> UserPermissions { get; set; } // Considera eliminarla o mantenerla para permisos excepcionales
+                                                                       // Mi recomendación es no usarla si vas a usar Roles + RolePermissions extensivamente
 
     public virtual DbSet<UserToken> UserTokens { get; set; }
 
@@ -367,6 +374,80 @@ public partial class DbCitasMedicasContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK_UserTokens_Users");
         });
+
+        // --- INICIO: NUEVAS CONFIGURACIONES PARA ROLES Y PERMISOS DE ROLES ---
+
+        modelBuilder.Entity<Role>(entity =>
+        {
+            entity.HasKey(e => e.RoleId); // Clave primaria
+            entity.Property(e => e.RoleName)
+                .IsRequired()
+                .HasMaxLength(50);
+            entity.Property(e => e.Description).HasMaxLength(200);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            // Configuraciones de BaseEntity para Role
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasMaxLength(50);
+            entity.Property(e => e.ModifiedAt).HasColumnType("datetime");
+            entity.Property(e => e.ModifiedBy).HasMaxLength(50);
+            entity.Property(e => e.DeletedAt).HasColumnType("datetime");
+            entity.Property(e => e.DeletedBy).HasMaxLength(50);
+
+            entity.HasIndex(e => e.RoleName).IsUnique(); // Nombre del rol debe ser único
+        });
+
+        modelBuilder.Entity<UserRole>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.RoleId }); // Clave primaria compuesta
+
+            entity.Property(e => e.AssignedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.AssignedBy).HasMaxLength(50);
+
+            // Relación con User
+            entity.HasOne(ur => ur.User)
+                .WithMany(u => u.UserRoles) // Asegúrate de que tu modelo User tenga una colección ICollection<UserRole> UserRoles
+                .HasForeignKey(ur => ur.UserId)
+                .OnDelete(DeleteBehavior.Cascade) // Si un usuario se elimina, sus asignaciones de rol también
+                .HasConstraintName("FK_UserRoles_Users");
+
+            // Relación con Role
+            entity.HasOne(ur => ur.Role)
+                .WithMany(r => r.UserRoles) // Asegúrate de que tu modelo Role tenga una colección ICollection<UserRole> UserRoles
+                .HasForeignKey(ur => ur.RoleId)
+                .OnDelete(DeleteBehavior.Cascade) // Si un rol se elimina, sus asignaciones de usuario-rol también
+                .HasConstraintName("FK_UserRoles_Roles");
+        });
+
+        modelBuilder.Entity<RolePermission>(entity =>
+        {
+            entity.HasKey(e => new { e.RoleId, e.PermissionId }); // Clave primaria compuesta
+
+            entity.Property(e => e.GrantedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.GrantedBy).HasMaxLength(50);
+
+            // Relación con Role
+            entity.HasOne(rp => rp.Role)
+                .WithMany(r => r.RolePermissions) // Asegúrate de que tu modelo Role tenga una colección ICollection<RolePermission> RolePermissions
+                .HasForeignKey(rp => rp.RoleId)
+                .OnDelete(DeleteBehavior.Cascade) // Si un rol se elimina, sus permisos asociados también
+                .HasConstraintName("FK_RolePermissions_Roles");
+
+            // Relación con Permission
+            entity.HasOne(rp => rp.Permission)
+                .WithMany(p => p.RolePermissions) // Asegúrate de que tu modelo Permission tenga una colección ICollection<RolePermission> RolePermissions
+                .HasForeignKey(rp => rp.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade) // Si un permiso se elimina, sus asignaciones de rol-permiso también
+                .HasConstraintName("FK_RolePermissions_Permissions");
+        });
+
+        // --- FIN: NUEVAS CONFIGURACIONES PARA ROLES Y PERMISOS DE ROLES ---
 
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())

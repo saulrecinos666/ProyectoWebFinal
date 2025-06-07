@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ProyectoFinal.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-i2rAEpvagtlXDEjBvLSAASpPzN0Vb+Se4pfnlrGQDqwFVhpzaqPDW/CWYc/miZ9wtCg5zYpEKWy7K1yYm9Zc7w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
     <header>
@@ -23,94 +23,162 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")"
-                               asp-area="" asp-controller="Chat" asp-action="Index">
+                            @* Ajuste para que "Inicio" solo esté activo para Home/Index *@
+                            <a class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Index" && ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")"
+                               asp-area="" asp-controller="Home" asp-action="Index">
                                 <i class="fas fa-home me-1"></i> Inicio
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="AppointmentUI" asp-action="Index">
-                                <i class="fas fa-calendar-plus me-1"></i> Agendar Cita
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="DoctorUI" asp-action="Index">
-                                <i class="fas fa-calendar-plus me-1"></i> Gestion Doctores
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="InstitutionUI" asp-action="Index">
-                                <i class="fas fa-calendar-plus me-1"></i> Gestion Institutiones
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="SpecialtyUI" asp-action="Index">
-                                <i class="fas fa-stethoscope me-1"></i> Gestion Especialidades
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="PatientUI" asp-action="Index">
-                                <i class="fas fa-stethoscope me-1"></i> Gestion Pacientes
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="UserUI" asp-action="Index">
-                                <i class="fas fa-info-circle me-1"></i> Gestion Usuarios
-                            </a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user-circle me-1"></i> @User.Identity.Name
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
-                                <li>
-                                    <a class="dropdown-item" asp-controller="UserProfile" asp-action="Index">
-                                        <i class="fas fa-user-cog me-1"></i> Mi Perfil
+
+                        @* Solo mostrar si el usuario está autenticado *@
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            @* Agendar Cita: Requiere permiso para gestionar citas *@
+                            @if (User.HasClaim("Permission", "can_manage_appointments"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="AppointmentUI" asp-action="Index">
+                                        <i class="fas fa-calendar-plus me-1"></i> Agendar Cita
                                     </a>
                                 </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form asp-area="" asp-controller="Auth" asp-action="Logout" method="post" id="logoutForm" class="form-inline">
-                                        <button type="submit" class="dropdown-item">
+                            }
+
+                            @* Gestión Doctores: Requiere permiso para gestionar doctores *@
+                            @if (User.HasClaim("Permission", "can_manage_doctors"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="DoctorUI" asp-action="Index">
+                                        <i class="fas fa-user-md me-1"></i> Gestión Doctores
+                                    </a>
+                                </li>
+                            }
+
+                            @* Gestión Instituciones: Requiere permiso para gestionar instituciones *@
+                            @if (User.HasClaim("Permission", "can_manage_institutions"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="InstitutionUI" asp-action="Index">
+                                        <i class="fas fa-hospital me-1"></i> Gestión Instituciones
+                                    </a>
+                                </li>
+                            }
+
+                            @* Gestión Especialidades: Requiere permiso para gestionar especialidades *@
+                            @if (User.HasClaim("Permission", "can_manage_specialties"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="SpecialtyUI" asp-action="Index">
+                                        <i class="fas fa-stethoscope me-1"></i> Gestión Especialidades
+                                    </a>
+                                </li>
+                            }
+
+                            @* Gestión Pacientes: Requiere permiso para gestionar pacientes *@
+                            @if (User.HasClaim("Permission", "can_manage_patients"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="PatientUI" asp-action="Index">
+                                        <i class="fas fa-procedures me-1"></i> Gestión Pacientes
+                                    </a>
+                                </li>
+                            }
+
+                            @* Gestión Usuarios: Requiere permiso para gestionar usuarios *@
+                            @if (User.HasClaim("Permission", "can_manage_users"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="UserUI" asp-action="Index">
+                                        <i class="fas fa-users-cog me-1"></i> Gestión Usuarios
+                                    </a>
+                                </li>
+                            }
+
+                            @if (User.HasClaim("Permission", "can_manage_roles"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="RoleUI" asp-action="Index">
+                                        <i class="fas fa-user-tag me-1"></i> Gestión Roles
+                                    </a>
+                                </li>
+                            }
+
+                            @* Reportes: Requiere permiso para generar reportes *@
+                            @if (User.HasClaim("Permission", "can_generate_reports"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="ReportUI" asp-action="Index">
+                                        <i class="fas fa-file-alt me-1"></i> Reportes
+                                    </a>
+                                </li>
+                            }
+
+                        } @* Fin if (User.Identity.IsAuthenticated) *@
+                    </ul>
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-circle me-1"></i> @User.Identity.Name
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <button type="button" id="logoutButton" class="dropdown-item">
                                             <i class="fas fa-sign-out-alt me-1"></i> Cerrar Sesión
                                         </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            @* Mostrar "Iniciar Sesión" si no está autenticado *@
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Login">
+                                    <i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión
+                                </a>
+                            </li>
+                            @* Mostrar "Registrarse" si no está autenticado *@
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Register">
+                                    <i class="fas fa-user-plus me-1"></i> Registrarse
+                                </a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
 
-    @* Contenedor principal de la página. Este es el que crecerá para empujar el footer. *@
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    @* AHORA EL CHAT VA AQUÍ, FUERA DEL CONTENEDOR PRINCIPAL, PERO ANTES DEL FOOTER. *@
-    <div id="chat-widget-container" class="chat-closed">
-        <div id="chat-header">
-            <span id="loggedInUsernameDisplay">Chateando como: Usuario</span>
-            <button id="toggleChatBtn" class="btn btn-sm btn-light">
-                <i class="fas fa-chevron-up"></i>
-            </button>
-        </div>
-
-        <div id="chat-content">
-            <div class="input-group mb-3">
-                <input id="messageInput" class="form-control" placeholder="Escribe tu mensaje..." />
-                <button id="sendBtn" class="btn btn-primary">Enviar</button>
+    @* Widget de Chat: Solo si el usuario está autenticado *@
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div id="chat-widget-container" class="chat-closed">
+            <div id="chat-header">
+                <span id="loggedInUsernameDisplay">Chateando como: Usuario</span>
+                <button id="toggleChatBtn" class="btn btn-sm btn-light">
+                    <i class="fas fa-chevron-up"></i>
+                </button>
             </div>
 
-            <div id="chat" class="border rounded p-3 bg-light" style="height: 300px; overflow-y: auto;"></div>
+            <div id="chat-content">
+                <div class="input-group mb-3">
+                    <input id="messageInput" class="form-control" placeholder="Escribe tu mensaje..." />
+                    <button id="sendBtn" class="btn btn-primary">Enviar</button>
+                </div>
+
+                <div id="chat" class="border rounded p-3 bg-light" style="height: 300px; overflow-y: auto;"></div>
+            </div>
         </div>
-    </div>
+    }
 
     <footer class="footer py-4 bg-dark text-white-50">
         <div class="container text-center">
@@ -148,179 +216,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    @* Aquí puedes incluir un archivo JS para el chat, o el script directo si no usas @section Scripts en el _Layout *@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-    <script>
-        // Script para manejar el logout del lado del cliente
-        document.addEventListener('DOMContentLoaded', function() {
-            const logoutForm = document.getElementById('logoutForm');
-
-            if (logoutForm) {
-                logoutForm.addEventListener('submit', async function(event) {
-                    event.preventDefault();
-                    const token = localStorage.getItem('jwtToken');
-
-                    try {
-                        const response = await fetch(logoutForm.action, {
-                            method: logoutForm.method,
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                        });
-
-                        if (response.ok) {
-                            console.log('Sesión cerrada en el servidor.');
-                        } else {
-                            const errorData = await response.json();
-                            console.error('Error al cerrar sesión en el servidor:', errorData.Message || 'Error desconocido');
-                        }
-                    } catch (error) {
-                        console.error('Error de red al intentar cerrar sesión:', error);
-                    } finally {
-                        localStorage.removeItem('jwtToken');
-                        console.log('Token JWT eliminado del localStorage.');
-                        window.location.href = '/Home/Login';
-                    }
-                });
-            }
-        });
-
-        // --- SCRIPTS DEL CHAT (MOVIDOS DE Index.cshtml) ---
-        (async function () {
-            // Obtener el token JWT del localStorage
-            const token = localStorage.getItem("jwtToken");
-
-            // Elementos del DOM del chat
-            const sendBtn = document.getElementById("sendBtn");
-            const messageInput = document.getElementById("messageInput");
-            const loggedInUsernameDisplay = document.getElementById("loggedInUsernameDisplay");
-            const toggleChatBtn = document.getElementById("toggleChatBtn");
-            const chatWidgetContainer = document.getElementById("chat-widget-container");
-
-            // Si no hay token, deshabilitar el chat y mostrar mensaje
-            if (!token) {
-                console.error("Error: No se encontró el token JWT. Por favor, inicie sesión para usar el chat.");
-                loggedInUsernameDisplay.textContent = "Para chatear, por favor, inicia sesión.";
-                if (sendBtn) sendBtn.disabled = true;
-                if (messageInput) messageInput.disabled = true;
-                if (toggleChatBtn) toggleChatBtn.disabled = true;
-                if (chatWidgetContainer) {
-                    chatWidgetContainer.classList.remove('chat-open');
-                    chatWidgetContainer.classList.add('chat-closed');
-                }
-                return; // Detiene la ejecución del script del chat si no hay token
-            }
-
-            // Configurar la conexión SignalR
-            const connection = new signalR.HubConnectionBuilder()
-                .withUrl("http://192.168.1.31:5278/chathub", {
-                    accessTokenFactory: () => token // Envía el token JWT en cada solicitud al hub
-                })
-                .withAutomaticReconnect() // Intentar reconectar automáticamente
-                .build();
-
-            // Manejar la recepción de mensajes
-            connection.on("ReceiveMessage", function (user, message) {
-                const chat = document.getElementById("chat");
-                if (chat) {
-                    const msg = document.createElement("div");
-                    msg.innerHTML = `<strong>${user}:</strong> ${message}`;
-                    chat.appendChild(msg);
-                    chat.scrollTop = chat.scrollHeight; // Desplazar al final
-                }
-            });
-
-            // Iniciar la conexión SignalR
-            try {
-                await connection.start();
-                console.log("Conexión SignalR establecida!");
-
-                // Decodificar el token para obtener y mostrar el nombre de usuario
-                try {
-                    const base64Url = token.split('.')[1];
-                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                    }).join(''));
-                    const decodedToken = JSON.parse(jsonPayload);
-
-                    let usernameFromToken = "Usuario";
-                    if (decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"]) {
-                        usernameFromToken = decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
-                    } else if (decodedToken.unique_name) {
-                        usernameFromToken = decodedToken.unique_name;
-                    } else if (decodedToken.name) {
-                        usernameFromToken = decodedToken.name;
-                    }
-
-                    if (loggedInUsernameDisplay) loggedInUsernameDisplay.textContent = `Chateando como: ${usernameFromToken}`;
-                    if (chatWidgetContainer) {
-                        chatWidgetContainer.classList.remove('chat-closed');
-                        chatWidgetContainer.classList.add('chat-open');
-                    }
-
-                } catch (e) {
-                    console.warn("No se pudo decodificar el token para obtener el nombre de usuario.", e);
-                    if (loggedInUsernameDisplay) loggedInUsernameDisplay.textContent = "Chateando como: Usuario (Error al obtener nombre)";
-                }
-
-            } catch (err) {
-                console.error("Error al iniciar la conexión SignalR: ", err.toString());
-                if (sendBtn) sendBtn.disabled = true;
-                if (messageInput) messageInput.disabled = true;
-                if (loggedInUsernameDisplay) loggedInUsernameDisplay.textContent = "Error de conexión. Por favor, intente de nuevo.";
-                if (toggleChatBtn) toggleChatBtn.disabled = true;
-                if (chatWidgetContainer) {
-                    chatWidgetContainer.classList.remove('chat-open');
-                    chatWidgetContainer.classList.add('chat-closed');
-                }
-            }
-
-            // --- Manejar el botón de abrir/cerrar chat ---
-            if (toggleChatBtn) {
-                toggleChatBtn.addEventListener("click", function() {
-                    if (chatWidgetContainer) {
-                        if (chatWidgetContainer.classList.contains('chat-open')) {
-                            chatWidgetContainer.classList.remove('chat-open');
-                            chatWidgetContainer.classList.add('chat-closed');
-                            toggleChatBtn.querySelector('i').classList.remove('fa-chevron-up');
-                            toggleChatBtn.querySelector('i').classList.add('fa-chevron-down');
-                        } else {
-                            chatWidgetContainer.classList.remove('chat-closed');
-                            chatWidgetContainer.classList.add('chat-open');
-                            toggleChatBtn.querySelector('i').classList.remove('fa-chevron-down');
-                            toggleChatBtn.querySelector('i').classList.add('fa-chevron-up');
-                        }
-                    }
-                });
-            }
-
-
-            // Enviar mensaje al hacer click en el botón
-            if (sendBtn) {
-                sendBtn.addEventListener("click", function () {
-                    const message = messageInput.value.trim();
-                    if (message) {
-                        connection.invoke("SendMessage", message)
-                                 .catch(err => console.error("Error al enviar mensaje:", err.toString()));
-                        messageInput.value = ""; // Limpiar el input
-                    }
-                });
-            }
-
-            // Enviar mensaje al presionar Enter en el input
-            if (messageInput) {
-                messageInput.addEventListener("keypress", function (e) {
-                    if (e.key === "Enter") {
-                        if (sendBtn) sendBtn.click();
-                    }
-                });
-            }
-
-        })();
-        // --- FIN DE SCRIPTS DEL CHAT ---
-    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

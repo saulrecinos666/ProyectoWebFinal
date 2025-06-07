@@ -9,6 +9,9 @@ using StackExchange.Redis;
 using ProyectoFinal.Hubs;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Parcial3.Services; // Asegúrate de que este namespace es el correcto para tu ReportService y RoleService
+using ProyectoFinal.Services; // ¡NUEVO! Este using para RoleService si lo moviste aquí
+using Microsoft.AspNetCore.Http; // ¡NUEVO! Necesario para IHttpContextAccessor
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,34 +20,38 @@ var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
-                      policy =>
-                      {
-                          policy.WithOrigins("http://localhost:5278", "http://192.168.1.31:5278")
-                                .AllowAnyHeader()
-                                .AllowAnyMethod()
-                                .AllowCredentials();
-                      });
+                               policy =>
+                               {
+                                   policy.WithOrigins("http://localhost:5278", "http://192.168.1.31:5278")
+                                           .AllowAnyHeader()
+                                           .AllowAnyMethod()
+                                           .AllowAnyOrigin(); // Considera usar .AllowAnyOrigin() para desarrollo o con un filtro más estricto
+                                                              // .AllowCredentials(); // AllowCredentials no se puede usar con AllowAnyOrigin() en producción
+                               });
 });
 
-builder.Services.AddSignalR().AddStackExchangeRedis("localhost:6379", options =>
+// Obtén la cadena de conexión de Redis desde la configuración
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+
+Console.WriteLine($"DEBUG: Redis Connection String used by SignalR: {redisConnectionString}");
+
+builder.Services.AddSignalR().AddStackExchangeRedis(redisConnectionString, options =>
 {
     options.Configuration.ChannelPrefix = "ChatApp";
 });
 
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
+// Esta inyección de IConnectionMultiplexer también usará la misma cadena de conexión
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var configuration = builder.Configuration.GetConnectionString("Redis");
     return ConnectionMultiplexer.Connect(configuration);
 });
 
-// *** MODIFICACIÓN CLAVE: AÑADIR AUTENTICACIÓN BASADA EN COOKIES ***
+// Configuración de autenticación (Cookies y JWT Bearer)
 builder.Services.AddAuthentication(options =>
 {
-    // Establece un esquema por defecto, puedes elegir JWT o Cookies.
-    // Si quieres que las páginas sean protegidas por cookies por defecto, usa CookieAuthenticationDefaults.AuthenticationScheme.
-    // Si quieres que las APIs sean por JWT por defecto, puedes dejarlo así o especificar en [Authorize(AuthenticationSchemes = "...")]
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme; // Por defecto para vistas
     options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme; // Para desafíos de autenticación en vistas
 })
@@ -85,12 +92,49 @@ builder.Services.AddAuthentication(options =>
             }
             return Task.CompletedTask;
         }
-        // ELIMINAR O COMENTAR EL EVENTO OnChallenge DE AQUÍ (Tu middleware lo maneja)
     };
 });
 
 builder.Services.AddDbContext<DbCitasMedicasContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Registro de tu ReportService
+builder.Services.AddScoped<ReportService>();
+
+// --- ¡NUEVO! Registro de IHttpContextAccessor y RoleService ---
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>(); // Necesario para RoleService
+builder.Services.AddScoped<RoleService>(); // Registro de tu nuevo RoleService
+// --- FIN: Registro de IHttpContextAccessor y RoleService ---
+
+// Configuración de Políticas de Autorización
+builder.Services.AddAuthorization(options =>
+{
+    // Políticas basadas en Roles (usando ClaimTypes.Role)
+    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Administrador"));
+    options.AddPolicy("RequireDoctorRole", policy => policy.RequireRole("Doctor"));
+    options.AddPolicy("RequirePatientRole", policy => policy.RequireRole("Paciente"));
+    options.AddPolicy("RequireSecretaryRole", policy => policy.RequireRole("Secretaria")); // Ejemplo si tienes este rol
+
+    // Políticas basadas en Permisos (usando el tipo de Claim "Permission")
+    options.AddPolicy("CanViewAppointments", policy => policy.RequireClaim("Permission", "can_view_appointments"));
+    options.AddPolicy("CanManageAppointments", policy => policy.RequireClaim("Permission", "can_manage_appointments")); // CRUD de citas
+    options.AddPolicy("CanManageDoctors", policy => policy.RequireClaim("Permission", "can_manage_doctors"));
+    options.AddPolicy("CanManageInstitutions", policy => policy.RequireClaim("Permission", "can_manage_institutions"));
+    options.AddPolicy("CanManageSpecialties", policy => policy.RequireClaim("Permission", "can_manage_specialties"));
+    options.AddPolicy("CanManagePatients", policy => policy.RequireClaim("Permission", "can_manage_patients"));
+    options.AddPolicy("CanManageUsers", policy => policy.RequireClaim("Permission", "can_manage_users"));
+    options.AddPolicy("CanGenerateReports", policy => policy.RequireClaim("Permission", "can_generate_reports"));
+    options.AddPolicy("CanViewLoginHistory", policy => policy.RequireClaim("Permission", "can_view_login_history")); // Ejemplo
+
+    // ¡NUEVA POLÍTICA PARA GESTIÓN DE ROLES!
+    options.AddPolicy("CanManageRoles", policy => policy.RequireClaim("Permission", "can_manage_roles"));
+
+    // Políticas combinadas
+    options.AddPolicy("AdminOrCanManageUsers", policy => policy.RequireAssertion(context =>
+        context.User.IsInRole("Administrador") || context.User.HasClaim("Permission", "can_manage_users")
+    ));
+});
+
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();

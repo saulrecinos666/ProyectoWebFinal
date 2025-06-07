@@ -50,36 +50,64 @@ footer {
 
 
 /* **Importante:** Verifica que no tengas otra regla de 'body { margin-bottom: ... }'
-   en tu site.css o en otro archivo que pueda estar cargándose después. */
+    en tu site.css o en otro archivo que pueda estar cargándose después. */
 /* Si existiera, ELIMÍNALA. */
 
-/* Resto de tus estilos del site.css (chat, hero, especialidades, testimonios, etc.) */
-/* Asegúrate de que los estilos del chat flotante no tengan un z-index menor que el footer si este último fuera fixed */
+/* Estilos para el widget de chat flotante */
 #chat-widget-container {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 320px;
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1050; /* Aumenta el z-index para asegurar que esté sobre el footer si el footer también es fixed */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
     overflow: hidden;
-    transition: height 0.3s ease-in-out, width 0.3s ease-in-out;
+    transition: height 0.3s ease-in-out, width 0.3s ease-in-out, opacity 0.3s ease-in-out, border-radius 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    /* Estado inicial por defecto, se sobrescribe por .chat-open o .chat-closed */
+    height: 50px;
+    width: 200px;
 }
+
+    #chat-widget-container.chat-open {
+        height: 450px;
+        width: 350px;
+        opacity: 1;
+        pointer-events: auto;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
+    #chat-widget-container.chat-closed {
+        height: 50px;
+        width: 200px;
+        opacity: 1;
+        pointer-events: auto;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
+    #chat-widget-container.chat-disabled {
+        height: 0;
+        width: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
 
 #chat-header {
     background-color: #007bff;
     color: white;
     padding: 10px 15px;
-    border-bottom: 1px solid #0056b3;
-    cursor: pointer;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid #0056b3;
 }
 
     #chat-header #loggedInUsernameDisplay {
@@ -97,49 +125,60 @@ footer {
     }
 
 #chat-content {
-    padding: 15px;
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    height: 380px;
+    padding: 15px;
+    visibility: visible;
+    opacity: 1;
+    height: auto;
+    transition: visibility 0.3s, opacity 0.3s ease-in-out, height 0.3s ease-in-out, padding 0.3s ease-in-out;
 }
 
-    #chat-content .input-group {
-        margin-bottom: 10px;
-    }
-
-    #chat-content #chat {
-        flex-grow: 1;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        padding: 10px;
-        background-color: #f8f9fa;
-        margin-top: 5px;
-    }
-
-.chat-closed {
-    height: 50px;
-    width: 320px;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+#chat-widget-container.chat-closed #chat-content {
+    visibility: hidden;
+    opacity: 0;
+    height: 0;
+    padding: 0;
 }
 
-    .chat-closed #chat-content {
-        display: none;
-    }
-
-.chat-open {
-    height: 450px;
-    width: 350px;
+#chat-content .input-group {
+    margin-bottom: 10px;
 }
 
-.fas.fa-chevron-up {
+#chat-content #chat {
+    flex-grow: 1;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    margin-top: 5px;
+}
+
+/* Icono de rotación para minimizar/maximizar */
+#toggleChatBtn i {
     transform: rotate(0deg);
     transition: transform 0.3s ease;
 }
 
-.chat-closed .fas.fa-chevron-up {
+#chat-widget-container.chat-closed #toggleChatBtn i {
     transform: rotate(180deg);
 }
+
+/* Asegurarse que los border-radius en inputs/buttons sean correctos */
+#messageInput {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+#sendBtn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Resto de tus estilos existentes para otras secciones */
 
 /* Estilos para la sección Hero (de la página de citas médicas) */
 .hero-section {
@@ -343,3 +382,15 @@ footer {
         transform: translateY(-3px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
+
+/* Specific styles for the Reportes menu item */
+.navbar-nav .nav-item .nav-link .fa-file-alt {
+    /* You can add specific styles here if needed, e.g., to change color or size slightly */
+    color: inherit; /* Inherit color from the parent nav-link */
+}
+
+/* ¡NUEVO! Estilos específicos para el elemento del menú de Gestión Roles */
+.navbar-nav .nav-item .nav-link .fa-user-tag {
+    /* Puedes añadir estilos específicos aquí si es necesario, por ejemplo, un color diferente */
+    color: inherit; /* Heredar color del nav-link padre */
+}

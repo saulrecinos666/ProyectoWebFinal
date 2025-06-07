@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      # SQL Server Connection String
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal\\SQLEXPRESS;Database=dbCitasMedicas;User Id=sa;Password=123;TrustServerCertificate=True;
+      # Redis Connection String
+      - ConnectionStrings__Redis=redis:6379,abortConnect=false
+      # Kestrel Binding
+      - ASPNETCORE_URLS=http://0.0.0.0:80
+      # JWT Settings - ¡AÑADE ESTAS LÍNEAS!
+      - JwtSettings__SecretKey=Q2M+M5oEyJ7gV/yo07X0+WrRmLbfKON6m+uFLgx8I9A=
+      - JwtSettings__Issuer=ProyectoFinalAPI
+      - JwtSettings__Audience=ProyectoFinalAPIUsers
+      - JwtSettings__ExpiresInMinutes=60 # <-- ¡AQUÍ ESTÁ LA SOLUCIÓN DEL ERROR!
+
+      - ASPNETCORE_ENVIRONMENT=Production # (Opcional, pero recomendado)
+    depends_on:
+      - redis
+
+  redis:
+    image: redis/redis-stack-server:latest # O 'redis:latest'
+    ports:
+      - "6379:6379"
+    # volumes:
+    #   - redis_data:/data
+
+# volumes:
+#   redis_data:

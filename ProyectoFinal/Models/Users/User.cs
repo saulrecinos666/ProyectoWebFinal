@@ -1,11 +1,13 @@
 ﻿using ProyectoFinal.Models.Appointments;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Patients;
+using ProyectoFinal.Models.Roles; // ¡NUEVO! Agrega este using para UserRole
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic; // Asegúrate de que este using esté presente
 
 namespace ProyectoFinal.Models.Users;
 
-public partial class User : BaseEntity
+public partial class User : BaseEntity // ¡Confirmado que hereda de BaseEntity, perfecto!
 {
     public int UserId { get; set; }
 
@@ -27,4 +29,7 @@ public partial class User : BaseEntity
     public virtual ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();
 
     public virtual ICollection<UserToken> UserTokens { get; set; } = new List<UserToken>();
+
+    // ¡NUEVO! Propiedad de navegación para la relación con Roles
+    public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }
