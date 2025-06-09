@@ -25,6 +25,8 @@
     const editPatientModal = new bootstrap.Modal(document.getElementById('editPatientModal'));
     const detailsPatientModal = new bootstrap.Modal(document.getElementById('detailsPatientModal'));
 
+    const newUserContainer = document.getElementById('new-user-view-container');
+
     // --- Funciones Auxiliares ---
 
     // Función para mostrar Toast de Bootstrap
@@ -288,7 +290,13 @@
     // --- Event Listeners ---
 
     // Inicializar la carga de pacientes al cargar el DOM
-    loadPatients();
+    if (newUserContainer) {
+        // Si el contenedor de nuevo usuario existe, muestra el modal para completar el perfil.
+        createPatientModal.show();
+    } else {
+        // Si no, significa que la tabla de pacientes está visible, así que la cargamos.
+        loadPatients();
+    }
 
     // Event listener para el formulario de Creación
     createPatientForm.addEventListener('submit', async (e) => {
@@ -431,54 +439,56 @@
         }
     });
 
-    // Delegación de eventos para los botones de Ver, Editar, Activar y Desactivar en la tabla
-    patientsTableBody.addEventListener('click', async function (event) {
-        const target = event.target.closest('button');
+    if (patientsTableBody) {
+        // Delegación de eventos para los botones de Ver, Editar, Activar y Desactivar en la tabla
+        patientsTableBody.addEventListener('click', async function (event) {
+            const target = event.target.closest('button');
 
-        if (!target) return;
+            if (!target) return;
 
-        const patientId = target.dataset.id;
-        if (!patientId) return;
+            const patientId = target.dataset.id;
+            if (!patientId) return;
 
-        if (target.classList.contains('view-btn')) {
-            showDetails(patientId);
-        } else if (target.classList.contains('edit-btn')) {
-            populateEditForm(patientId);
-        } else if (target.classList.contains('desactivate-btn') || target.classList.contains('activate-btn')) {
-            const action = target.classList.contains('desactivate-btn') ? 'desactivar' : 'activar';
-            const isActive = action === 'activar';
-            const confirmMsg = `¿Está seguro de que desea ${action} este paciente?`;
+            if (target.classList.contains('view-btn')) {
+                showDetails(patientId);
+            } else if (target.classList.contains('edit-btn')) {
+                populateEditForm(patientId);
+            } else if (target.classList.contains('desactivate-btn') || target.classList.contains('activate-btn')) {
+                const action = target.classList.contains('desactivate-btn') ? 'desactivar' : 'activar';
+                const isActive = action === 'activar';
+                const confirmMsg = `¿Está seguro de que desea ${action} este paciente?`;
 
-            if (confirm(confirmMsg)) {
-                try {
-                    // Endpoint para activar/desactivar. Asumo que tienes ambos en tu controlador.
-                    const endpoint = isActive ? `${API_PATIENTS_URL}/${patientId}/activate` : `${API_PATIENTS_URL}/${patientId}/desactivate`;
+                if (confirm(confirmMsg)) {
+                    try {
+                        // Endpoint para activar/desactivar. Asumo que tienes ambos en tu controlador.
+                        const endpoint = isActive ? `${API_PATIENTS_URL}/${patientId}/activate` : `${API_PATIENTS_URL}/${patientId}/desactivate`;
 
-                    const response = await fetch(endpoint, {
-                        method: 'PATCH', // Usamos PATCH para actualizar parcialmente el estado
-                        headers: getAuthHeaders()
-                    });
+                        const response = await fetch(endpoint, {
+                            method: 'PATCH', // Usamos PATCH para actualizar parcialmente el estado
+                            headers: getAuthHeaders()
+                        });
 
-                    if (response.status === 401) {
-                        showToast("Sesión Expirada", "Su sesión ha expirado. Por favor, inicie sesión de nuevo.", false);
-                        localStorage.removeItem('jwtToken');
-                        setTimeout(() => window.location.href = '/Home/Login', 2000);
-                        return;
+                        if (response.status === 401) {
+                            showToast("Sesión Expirada", "Su sesión ha expirado. Por favor, inicie sesión de nuevo.", false);
+                            localStorage.removeItem('jwtToken');
+                            setTimeout(() => window.location.href = '/Home/Login', 2000);
+                            return;
+                        }
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                            throw new Error(errorData.message || JSON.stringify(errorData));
+                        }
+
+                        showToast("Éxito", `Paciente ${action} correctamente.`, true);
+                        loadPatients(); // Recargar la tabla
+                    } catch (error) {
+                        console.error(`Error al ${action} paciente:`, error);
+                        showToast(`Error al ${action}`, `Error al ${action} paciente: ${error.message}`, false);
                     }
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                        throw new Error(errorData.message || JSON.stringify(errorData));
-                    }
-
-                    showToast("Éxito", `Paciente ${action} correctamente.`, true);
-                    loadPatients(); // Recargar la tabla
-                } catch (error) {
-                    console.error(`Error al ${action} paciente:`, error);
-                    showToast(`Error al ${action}`, `Error al ${action} paciente: ${error.message}`, false);
                 }
             }
-        }
-    });
+        });
+    }
 
     // Opcional: Limpiar formularios al ocultar los modales para una mejor UX
     document.getElementById('createPatientModal').addEventListener('hidden.bs.modal', function () {

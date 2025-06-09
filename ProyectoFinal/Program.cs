@@ -117,7 +117,7 @@ builder.Services.AddAuthorization(options =>
 
     // Políticas basadas en Permisos (usando el tipo de Claim "Permission")
     options.AddPolicy("CanViewAppointments", policy => policy.RequireClaim("Permission", "can_view_appointments"));
-    options.AddPolicy("CanManageAppointments", policy => policy.RequireClaim("Permission", "can_manage_appointments")); // CRUD de citas
+    options.AddPolicy("CanManageAppointments", policy => policy.RequireClaim("Permission", "can_manage_appointments"));
     options.AddPolicy("CanManageDoctors", policy => policy.RequireClaim("Permission", "can_manage_doctors"));
     options.AddPolicy("CanManageInstitutions", policy => policy.RequireClaim("Permission", "can_manage_institutions"));
     options.AddPolicy("CanManageSpecialties", policy => policy.RequireClaim("Permission", "can_manage_specialties"));
@@ -126,6 +126,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CanGenerateReports", policy => policy.RequireClaim("Permission", "can_generate_reports"));
     options.AddPolicy("CanViewLoginHistory", policy => policy.RequireClaim("Permission", "can_view_login_history"));
     options.AddPolicy("CanAccessAppointments", policy => policy.RequireClaim("Permission", "can_access_appointments_section"));
+    options.AddPolicy("CanAccessPatients", policy => policy.RequireClaim("Permission", "can_access_patients_section"));
 
     // ¡NUEVA POLÍTICA PARA GESTIÓN DE ROLES!
     options.AddPolicy("CanManageRoles", policy => policy.RequireClaim("Permission", "can_manage_roles"));

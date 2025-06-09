@@ -74,7 +74,7 @@
                             }
 
                             @* Gestión Pacientes: Requiere permiso para gestionar pacientes *@
-                            @if (User.HasClaim("Permission", "can_manage_patients"))
+                            @if (User.HasClaim("Permission", "can_access_patients_section"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link" asp-area="" asp-controller="PatientUI" asp-action="Index">

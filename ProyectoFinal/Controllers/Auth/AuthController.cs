@@ -48,7 +48,7 @@ namespace ProyectoFinal.Controllers.Auth
                             .ThenInclude(rp => rp.Permission)
                 .Include(u => u.UserPermissions)
                     .ThenInclude(up => up.Permission)
-                .FirstOrDefaultAsync(u => u.Username == request.Username);
+                .FirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Username);
 
             if (user == null || _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password) == PasswordVerificationResult.Failed)
                 return Unauthorized(new { Message = "Credenciales incorrectas." });

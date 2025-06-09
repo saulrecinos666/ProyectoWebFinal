@@ -25,40 +25,30 @@ namespace ProyectoFinal.Controllers.Base // Tu namespace actual
         [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
-            // 1. Valida si el usuario tiene una sesión abierta (está autenticado)
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                // --- INICIO: NUEVA LÓGICA DE VERIFICACIÓN DE PERFIL ---
-
-                // a. Obtenemos el ID del usuario que ha iniciado sesión.
                 var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (!int.TryParse(userIdStr, out var userId))
                 {
-                    // Si hay un problema con el token/cookie, lo mejor es forzar un nuevo login.
                     await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                     return RedirectToAction("Login", "Home");
                 }
 
-                // b. Verificamos si existe un paciente asociado a este usuario.
+                // Usamos IgnoreQueryFilters() como la prueba definitiva
                 var patientExists = await _context.Patients.AnyAsync(p => p.UserId == userId);
 
-                // c. Si NO tiene un perfil de paciente, lo redirigimos para que lo cree.
                 if (!patientExists)
                 {
-                    // Opcional: Ponemos un mensaje para que el usuario sepa por qué lo redirigimos.
-                    TempData["InfoMessage"] = "Para continuar, por favor completa tu perfil de paciente.";
-
-                    // Asumimos que tendrás un PatientUIController con una acción Create.
+                    // Si NO existe, se va a crear el perfil
+                    TempData["InfoMessage"] = "Para usar el sistema, primero debe completar su perfil de paciente.";
                     return RedirectToAction("Index", "PatientUI");
                 }
 
-                // --- FIN: NUEVA LÓGICA ---
-
-                // d. Si el perfil SÍ existe, lo redirige a la pantalla principal, que es el Chat.
+                // Si SÍ existe, se va al chat
                 return RedirectToAction("Index", "Chat");
             }
 
-            // 3. Si no está autenticado, lo redirige a la página para que inicie sesión.
+            // Si no está autenticado, va al login
             return RedirectToAction("Login", "Home");
         }
 

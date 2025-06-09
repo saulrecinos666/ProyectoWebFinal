@@ -2,10 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Controllers.Base;
+using ProyectoFinal.Models.Appointments;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Patients;
 using ProyectoFinal.Models.Patients.Dto;
-using ProyectoFinal.Models.Users;
+using System.Security.Claims;
 
 namespace ProyectoFinal.Controllers.Patients
 {
@@ -24,7 +25,22 @@ namespace ProyectoFinal.Controllers.Patients
         [HttpGet]
         public async Task<IActionResult> GetAllPatients()
         {
-            var patients = await _context.Patients
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId))
+            {
+                return Unauthorized("Sesión inválida.");
+            }
+
+            var query = _context.Patients.AsQueryable();
+
+            // Si el usuario NO tiene permiso para gestionar todas los pacientes...
+            if (!User.HasClaim("Permission", "can_manage_patients"))
+            {
+                // ...filtramos las citas usando el UserId directo en la tabla de citas.
+                query = query.Where(a => a.UserId == userId);
+            }
+
+            var patients = await query
                 .Include(p => p.User)
                 .Select(p => new ResponsePatientDto 
                 {
@@ -59,6 +75,15 @@ namespace ProyectoFinal.Controllers.Patients
                 .FirstOrDefaultAsync(p => p.PatientId == id);
 
             if (patient == null) return NotFound();
+
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int.TryParse(userIdStr, out var currentUserId);
+
+            // Verificamos si es admin O es el paciente.
+            if (!User.HasClaim("Permission", "can_manage_patients") && patient.UserId != currentUserId)
+            {
+                return Forbid();
+            }
 
             var patientDto = new ResponsePatientDto
             {
@@ -142,6 +167,12 @@ namespace ProyectoFinal.Controllers.Patients
 
             if (existingPatient == null) return NotFound("Paciente no encontrado");
 
+            var currentUserId = GetUserId();
+            if (!User.HasClaim("Permission", "can_manage_patients") && existingPatient.UserId != currentUserId)
+            {
+                return Forbid();
+            }
+
             existingPatient.UserId = updatePatientDto.UserId;
             existingPatient.FirstName = updatePatientDto.FirstName;
             existingPatient.MiddleName = updatePatientDto.MiddleName;
@@ -167,6 +198,12 @@ namespace ProyectoFinal.Controllers.Patients
                 .FirstOrDefaultAsync(p => p.PatientId == id);
 
             if (patient == null) return NotFound();
+
+            var currentUserId = GetUserId();
+            if (!User.HasClaim("Permission", "can_manage_patients") && patient.UserId != currentUserId)
+            {
+                return Forbid();
+            }
 
             patient.IsActive = false;
             patient.DeletedAt = DateTime.Now;
