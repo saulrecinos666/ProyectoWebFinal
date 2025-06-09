@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using ProyectoFinal.Models.Base;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using ProyectoFinal.Models; // Asegúrate de que tu ErrorViewModel esté en este namespace o en el correcto.
-                            // Si ErrorViewModel está en Models.Base, no necesitas este using adicional.
+using ProyectoFinal.Models;
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore; // Asegúrate de que tu ErrorViewModel esté en este namespace o en el correcto.
+                                     // Si ErrorViewModel está en Models.Base, no necesitas este using adicional.
 
 namespace ProyectoFinal.Controllers.Base // Tu namespace actual
 {
@@ -21,16 +23,42 @@ namespace ProyectoFinal.Controllers.Base // Tu namespace actual
         }
 
         [AllowAnonymous]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             // 1. Valida si el usuario tiene una sesión abierta (está autenticado)
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                // 2. Si es así, lo redirige a la pantalla principal, que es el Chat.
+                // --- INICIO: NUEVA LÓGICA DE VERIFICACIÓN DE PERFIL ---
+
+                // a. Obtenemos el ID del usuario que ha iniciado sesión.
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdStr, out var userId))
+                {
+                    // Si hay un problema con el token/cookie, lo mejor es forzar un nuevo login.
+                    await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    return RedirectToAction("Login", "Home");
+                }
+
+                // b. Verificamos si existe un paciente asociado a este usuario.
+                var patientExists = await _context.Patients.AnyAsync(p => p.UserId == userId);
+
+                // c. Si NO tiene un perfil de paciente, lo redirigimos para que lo cree.
+                if (!patientExists)
+                {
+                    // Opcional: Ponemos un mensaje para que el usuario sepa por qué lo redirigimos.
+                    TempData["InfoMessage"] = "Para continuar, por favor completa tu perfil de paciente.";
+
+                    // Asumimos que tendrás un PatientUIController con una acción Create.
+                    return RedirectToAction("Index", "PatientUI");
+                }
+
+                // --- FIN: NUEVA LÓGICA ---
+
+                // d. Si el perfil SÍ existe, lo redirige a la pantalla principal, que es el Chat.
                 return RedirectToAction("Index", "Chat");
             }
 
-            // 3. Si no, lo redirige a la página para que inicie sesión.
+            // 3. Si no está autenticado, lo redirige a la página para que inicie sesión.
             return RedirectToAction("Login", "Home");
         }
 

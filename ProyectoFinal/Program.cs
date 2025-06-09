@@ -124,7 +124,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CanManagePatients", policy => policy.RequireClaim("Permission", "can_manage_patients"));
     options.AddPolicy("CanManageUsers", policy => policy.RequireClaim("Permission", "can_manage_users"));
     options.AddPolicy("CanGenerateReports", policy => policy.RequireClaim("Permission", "can_generate_reports"));
-    options.AddPolicy("CanViewLoginHistory", policy => policy.RequireClaim("Permission", "can_view_login_history")); // Ejemplo
+    options.AddPolicy("CanViewLoginHistory", policy => policy.RequireClaim("Permission", "can_view_login_history"));
+    options.AddPolicy("CanAccessAppointments", policy => policy.RequireClaim("Permission", "can_access_appointments_section"));
 
     // ¡NUEVA POLÍTICA PARA GESTIÓN DE ROLES!
     options.AddPolicy("CanManageRoles", policy => policy.RequireClaim("Permission", "can_manage_roles"));

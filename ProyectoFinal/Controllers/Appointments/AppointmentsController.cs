@@ -5,6 +5,7 @@ using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Appointments;
 using ProyectoFinal.Models.Appointments.Dto;
 using ProyectoFinal.Models.Base;
+using System.Security.Claims;
 
 namespace ProyectoFinal.Controllers.Appointments
 {
@@ -20,10 +21,26 @@ namespace ProyectoFinal.Controllers.Appointments
             _context = context;
         }
 
+        // --- MÉTODO GetAllAppointments CORREGIDO ---
         [HttpGet]
         public async Task<IActionResult> GetAllAppointments()
         {
-            var appointments = await _context.Appointments
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId))
+            {
+                return Unauthorized("Sesión inválida.");
+            }
+
+            var query = _context.Appointments.AsQueryable();
+
+            // Si el usuario NO tiene permiso para gestionar todas las citas...
+            if (!User.HasClaim("Permission", "can_manage_appointments"))
+            {
+                // ...filtramos las citas usando el UserId directo en la tabla de citas.
+                query = query.Where(a => a.UserId == userId);
+            }
+
+            var appointments = await query
                 .Include(a => a.Doctor)
                 .Include(a => a.Patient)
                 .Include(a => a.Institution)
@@ -41,11 +58,13 @@ namespace ProyectoFinal.Controllers.Appointments
                     ModifiedBy = a.ModifiedBy,
                     ModifiedAt = a.ModifiedAt
                 })
+                .OrderByDescending(a => a.AppointmentDate)
                 .ToListAsync();
 
             return Ok(appointments);
         }
 
+        // --- MÉTODO GetAppointmentById CON SEGURIDAD CORREGIDA ---
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAppointmentById(int id)
         {
@@ -57,9 +76,21 @@ namespace ProyectoFinal.Controllers.Appointments
 
             if (appointment == null) return NotFound();
 
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int.TryParse(userIdStr, out var currentUserId);
+
+            // Verificamos si es admin O si la cita le pertenece directamente.
+            if (!User.HasClaim("Permission", "can_manage_appointments") && appointment.UserId != currentUserId)
+            {
+                return Forbid();
+            }
+
             var appointmentDto = new ResponseAppointmentDto
             {
                 AppointmentId = appointment.AppointmentId,
+                DoctorId = appointment.DoctorId,
+                PatientId = appointment.PatientId,
+                InstitutionId = appointment.InstitutionId,
                 DoctorName = appointment.Doctor != null ? appointment.Doctor.FirstName + " " + appointment.Doctor.LastName : "NA",
                 PatientName = appointment.Patient != null ? appointment.Patient.FirstName + " " + appointment.Patient.LastName : "NA",
                 InstitutionName = appointment.Institution != null ? appointment.Institution.Name : "NA",
@@ -75,13 +106,22 @@ namespace ProyectoFinal.Controllers.Appointments
             return Ok(appointmentDto);
         }
 
+        // --- MÉTODO CreateAppointment CON LÓGICA DE STATUS CORREGIDA ---
         [HttpPost]
         public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentDto appointmentData)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            var currentUserId = GetUserId();
+
+            if (User.IsInRole("Usuario Estándar"))
+            {
+                appointmentData.Status = 0; // 0 = Programada
+            }
+
             var appointment = new Appointment
             {
+                UserId = currentUserId, // Asignamos el usuario logueado
                 DoctorId = appointmentData.DoctorId,
                 PatientId = appointmentData.PatientId,
                 InstitutionId = appointmentData.InstitutionId,
@@ -89,8 +129,8 @@ namespace ProyectoFinal.Controllers.Appointments
                 Status = appointmentData.Status,
                 Notes = appointmentData.Notes,
                 IsActive = true,
-                CreatedBy = GetUserId(),
-                CreatedAt = DateTime.Now
+                CreatedBy = currentUserId,
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Appointments.Add(appointment);
@@ -118,14 +158,20 @@ namespace ProyectoFinal.Controllers.Appointments
             return CreatedAtAction(nameof(GetAppointmentById), new { id = responseDto.AppointmentId }, responseDto);
         }
 
+        // --- MÉTODO UpdateAppointment CON SEGURIDAD AÑADIDA ---
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAppointment(int id, [FromBody] UpdateAppointmentDto updateAppointmentDto)
         {
-            var existingAppointment = await _context.Appointments
-                .FirstOrDefaultAsync(a => a.AppointmentId == id);
-
+            var existingAppointment = await _context.Appointments.FirstOrDefaultAsync(a => a.AppointmentId == id);
             if (existingAppointment == null) return NotFound("Cita no encontrada");
 
+            var currentUserId = GetUserId();
+            if (!User.HasClaim("Permission", "can_manage_appointments") && existingAppointment.UserId != currentUserId)
+            {
+                return Forbid();
+            }
+
+            // Aplicar cambios
             existingAppointment.AppointmentDate = updateAppointmentDto.AppointmentDate;
             existingAppointment.Status = updateAppointmentDto.Status;
             existingAppointment.Notes = updateAppointmentDto.Notes;
@@ -139,18 +185,22 @@ namespace ProyectoFinal.Controllers.Appointments
             return NoContent();
         }
 
-
+        // --- MÉTODO DesactivateAppointmen CON SEGURIDAD AÑADIDA ---
         [HttpPatch("{id}/desactivate")]
         public async Task<IActionResult> DesactivateAppointmen(int id)
         {
-            var appointment = await _context.Appointments
-                .FirstOrDefaultAsync(a => a.AppointmentId == id);
-
+            var appointment = await _context.Appointments.FirstOrDefaultAsync(a => a.AppointmentId == id);
             if (appointment == null) return NotFound();
 
-            appointment.DeletedAt = DateTime.Now;
-            appointment.DeletedBy = GetUserId();
+            var currentUserId = GetUserId();
+            if (!User.HasClaim("Permission", "can_manage_appointments") && appointment.UserId != currentUserId)
+            {
+                return Forbid();
+            }
+
             appointment.IsActive = false;
+            appointment.DeletedAt = DateTime.UtcNow;
+            appointment.DeletedBy = currentUserId;
 
             await _context.SaveChangesAsync();
             return NoContent();

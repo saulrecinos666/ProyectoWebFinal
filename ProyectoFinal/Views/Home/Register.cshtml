@@ -47,7 +47,8 @@
     </div>
 </div>
 
-<div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+@* Contenedor para las notificaciones Toast *@
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 1056">
     <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header">
             <strong class="me-auto" id="toastHeader"></strong>
@@ -59,90 +60,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        const API_REGISTER_URL = "http://localhost:5278/api/user"; // Endpoint de registro de usuario
-        const API_LOGIN_URL = "http://localhost:5278/api/auth/login"; // Endpoint de login
-
-        // Función para mostrar Toast de Bootstrap
-        function showToast(header, body, isSuccess = true) {
-            const toastElement = document.getElementById('liveToast');
-            const toastHeader = document.getElementById('toastHeader');
-            const toastBody = document.getElementById('toastBody');
-
-            toastHeader.textContent = header;
-            toastBody.textContent = body;
-
-            if (isSuccess) {
-                toastElement.classList.remove('bg-danger');
-                toastElement.classList.add('bg-success', 'text-white');
-            } else {
-                toastElement.classList.remove('bg-success');
-                toastElement.classList.add('bg-danger', 'text-white');
-            }
-
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
-        }
-
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); // Previene el envío tradicional del formulario
-
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (password !== confirmPassword) {
-                showToast("Error de Registro", "Las contraseñas no coinciden.", false);
-                return;
-            }
-
-            // Datos para el registro
-            const registerData = {
-                username: username,
-                email: email,
-                password: password
-            };
-
-            try {
-                const response = await fetch(API_REGISTER_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(registerData)
-                });
-
-                if (response.ok) {
-                    showToast("Registro Exitoso", "Usuario registrado correctamente. Iniciando sesión...", true);
-                    // Si el registro es exitoso, intenta iniciar sesión automáticamente
-                    const loginResponse = await fetch(API_LOGIN_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ username: username, password: password })
-                    });
-
-                    if (loginResponse.ok) {
-                        const loginData = await loginResponse.json();
-                        localStorage.setItem('jwtToken', loginData.token); // Guarda el token
-                        showToast("Inicio de Sesión Exitoso", "Redirigiendo al panel...", true);
-                        window.location.href = '/Chat'; // Redirige al panel de citas
-                    } else {
-                        const loginErrorData = await loginResponse.json();
-                        showToast("Error de Inicio de Sesión", loginErrorData.Message || "No se pudo iniciar sesión automáticamente. Intente manualmente.", false);
-                        window.location.href = '/Home/Login'; // Redirige al login para que intente manualmente
-                    }
-
-                } else {
-                    const errorData = await response.json();
-                    showToast("Error de Registro", errorData.Message || "Ocurrió un error durante el registro.", false);
-                }
-            } catch (error) {
-                console.error('Error en la solicitud de registro:', error);
-                showToast("Error de Red", "No se pudo conectar al servidor para registrar.", false);
-            }
-        });
-    </script>
+    <script src="~/js/register.js" asp-append-version="true"></script>
 }

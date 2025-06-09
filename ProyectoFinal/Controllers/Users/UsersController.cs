@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Base;
+using ProyectoFinal.Models.Roles;
 using ProyectoFinal.Models.Users;
 using ProyectoFinal.Models.Users.Dto;
 
@@ -71,7 +72,6 @@ namespace ProyectoFinal.Controllers.Users
             return Ok(userDto);
         }
 
-        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto createUserDto)
         {
@@ -99,8 +99,33 @@ namespace ProyectoFinal.Controllers.Users
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            var createdUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.UserId == user.UserId);
+            try
+            {
+                var defaultRole = await _context.Roles
+                    .FirstOrDefaultAsync(r => r.RoleName == "Usuario Estándar");
+
+                if (defaultRole != null)
+                {
+                    var userRole = new UserRole
+                    {
+                        UserId = user.UserId, 
+                        RoleId = defaultRole.RoleId, 
+                        AssignedAt = DateTime.UtcNow,
+                        AssignedBy = user.UserId.ToString() 
+                    };
+
+                    _context.UserRoles.Add(userRole);
+                    await _context.SaveChangesAsync(); 
+                }
+                else
+                {
+                    Console.WriteLine("ADVERTENCIA: No se encontró el rol por defecto 'Usuario Estándar'. El nuevo usuario fue creado sin rol.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR al asignar rol por defecto al usuario {user.Username}: {ex.Message}");
+            }
 
             var responseDto = new CreatedUserDto
             {
@@ -175,5 +200,19 @@ namespace ProyectoFinal.Controllers.Users
 
             return Ok(new { UserId = user.UserId, Username = user.Username });
         }
+
+        [HttpGet("without-patient")]
+        public async Task<IActionResult> GetUsersWithoutPatientProfile()
+        {
+            var usersWithPatient = _context.Patients.Select(p => p.UserId);
+
+            var usersWithoutPatient = await _context.Users
+                .Where(u => u.IsActive && !usersWithPatient.Contains(u.UserId))
+                .Select(u => new { u.UserId, u.Username, u.Email })
+                .ToListAsync();
+
+            return Ok(usersWithoutPatient);
+        }
+
     }
 }

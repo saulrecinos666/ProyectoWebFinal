@@ -34,7 +34,7 @@
                         @if (User.Identity.IsAuthenticated)
                         {
                             @* Agendar Cita: Requiere permiso para gestionar citas *@
-                            @if (User.HasClaim("Permission", "can_manage_appointments"))
+                            @if (User.HasClaim("Permission", "can_access_appointments_section"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link" asp-area="" asp-controller="AppointmentUI" asp-action="Index">

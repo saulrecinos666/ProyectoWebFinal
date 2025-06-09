@@ -3,6 +3,9 @@
     public class ResponseAppointmentDto
     {
         public int AppointmentId { get; set; }
+        public int DoctorId { get; set; }
+        public int PatientId { get; set; }
+        public int InstitutionId { get; set; }
         public string DoctorName { get; set; } = null!;
         public string PatientName { get; set; } = null!;
         public string InstitutionName { get; set; } = null!;

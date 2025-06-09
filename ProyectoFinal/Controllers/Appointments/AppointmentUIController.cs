@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ProyectoFinal.Controllers.Appointments
 {
     // Aplicar la política a nivel de controlador para que todas sus acciones estén protegidas
-    [Authorize(Policy = "CanManageAppointments")] // Requiere el permiso 'can_manage_appointments'
+    [Authorize(Policy = "CanAccessAppointments")] // Requiere el permiso 'can_manage_appointments'
     public class AppointmentUIController : Controller
     {
         public IActionResult Index()
