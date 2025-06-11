@@ -39,6 +39,7 @@ public partial class Doctor : BaseEntity
     public string Email { get; set; } = null!;
 
     public string? Phone { get; set; }
+
     public int UserId { get; set; }
 
     public virtual User User { get; set; } = null!;

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProyectoFinal.Models.Base;
 
@@ -11,9 +12,11 @@ using ProyectoFinal.Models.Base;
 namespace ProyectoFinal.Migrations
 {
     [DbContext(typeof(DbCitasMedicasContext))]
-    partial class DbCitasMedicasContextModelSnapshot : ModelSnapshot
+    [Migration("20250611044521_RemoveUserTokensTable")]
+    partial class RemoveUserTokensTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -723,6 +726,30 @@ namespace ProyectoFinal.Migrations
                     b.ToTable("UserLoginHistory", (string)null);
                 });
 
+            modelBuilder.Entity("ProyectoFinal.Models.Users.UserPermission", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("GrantedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("(getdate())");
+
+                    b.Property<string>("GrantedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("UserId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("UserPermissions");
+                });
+
             modelBuilder.Entity("ProyectoFinal.Models.Appointments.Appointment", b =>
                 {
                     b.HasOne("ProyectoFinal.Models.Doctors.Doctor", "Doctor")
@@ -882,6 +909,27 @@ namespace ProyectoFinal.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ProyectoFinal.Models.Users.UserPermission", b =>
+                {
+                    b.HasOne("ProyectoFinal.Models.Permissions.Permission", "Permission")
+                        .WithMany("UserPermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_UserPermissions_Permissions");
+
+                    b.HasOne("ProyectoFinal.Models.Users.User", "User")
+                        .WithMany("UserPermissions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_UserPermissions_Users");
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("ProyectoFinal.Models.Departments.Department", b =>
                 {
                     b.Navigation("Municipalities");
@@ -917,6 +965,8 @@ namespace ProyectoFinal.Migrations
             modelBuilder.Entity("ProyectoFinal.Models.Permissions.Permission", b =>
                 {
                     b.Navigation("RolePermissions");
+
+                    b.Navigation("UserPermissions");
                 });
 
             modelBuilder.Entity("ProyectoFinal.Models.Roles.Role", b =>
@@ -936,6 +986,8 @@ namespace ProyectoFinal.Migrations
                     b.Navigation("Patients");
 
                     b.Navigation("UserLoginHistories");
+
+                    b.Navigation("UserPermissions");
 
                     b.Navigation("UserRoles");
                 });

@@ -11,7 +11,6 @@ namespace ProyectoFinal.Models.Roles.Dto
         [StringLength(200, ErrorMessage = "La descripción no puede exceder los 200 caracteres.")]
         public string? Description { get; set; }
 
-        // Opcional: Para asignar permisos al crear el rol
         public List<int>? PermissionIds { get; set; }
     }
 }

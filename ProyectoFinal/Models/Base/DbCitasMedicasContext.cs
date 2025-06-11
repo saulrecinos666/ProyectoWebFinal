@@ -7,7 +7,7 @@ using ProyectoFinal.Models.Institutions;
 using ProyectoFinal.Models.Municipalities;
 using ProyectoFinal.Models.Patients;
 using ProyectoFinal.Models.Permissions;
-using ProyectoFinal.Models.Roles; // ¡NUEVO! Agrega este using
+using ProyectoFinal.Models.Roles; 
 using ProyectoFinal.Models.Specialties;
 using ProyectoFinal.Models.Users;
 using System.Linq.Expressions;
@@ -41,21 +41,17 @@ public partial class DbCitasMedicasContext : DbContext
 
     public virtual DbSet<Permission> Permissions { get; set; }
 
-    // ¡NUEVOS DBSETS!
     public virtual DbSet<Role> Roles { get; set; }
+
     public virtual DbSet<UserRole> UserRoles { get; set; }
+
     public virtual DbSet<RolePermission> RolePermissions { get; set; }
 
     public virtual DbSet<Specialty> Specialties { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
-    public virtual DbSet<UserLoginHistory> UserLoginHistories { get; set; }
-
-    public virtual DbSet<UserPermission> UserPermissions { get; set; } // Considera eliminarla o mantenerla para permisos excepcionales
-                                                                       // Mi recomendación es no usarla si vas a usar Roles + RolePermissions extensivamente
-
-    public virtual DbSet<UserToken> UserTokens { get; set; }
+    public virtual DbSet<UserLoginHistory> UserLoginHistories { get; set; }                                                       
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -338,41 +334,6 @@ public partial class DbCitasMedicasContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.UserLoginHistories)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK_UserLoginHistory_Users");
-        });
-
-        modelBuilder.Entity<UserPermission>(entity =>
-        {
-            entity.HasKey(e => new { e.UserId, e.PermissionId });
-
-            entity.Property(e => e.GrantedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.GrantedBy).HasMaxLength(50);
-
-            entity.HasOne(d => d.Permission).WithMany(p => p.UserPermissions)
-                .HasForeignKey(d => d.PermissionId)
-                .OnDelete(DeleteBehavior.NoAction)
-                .HasConstraintName("FK_UserPermissions_Permissions");
-
-            entity.HasOne(d => d.User).WithMany(p => p.UserPermissions)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.NoAction)
-                .HasConstraintName("FK_UserPermissions_Users");
-        });
-
-        modelBuilder.Entity<UserToken>(entity =>
-        {
-            entity.HasKey(e => e.TokenId).HasName("PK__UserToke__658FEEEABDD8CD70");
-
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Expiration).HasColumnType("datetime");
-            entity.Property(e => e.Token).HasMaxLength(500);
-
-            entity.HasOne(d => d.User).WithMany(p => p.UserTokens)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_UserTokens_Users");
         });
 
         // --- INICIO: NUEVAS CONFIGURACIONES PARA ROLES Y PERMISOS DE ROLES ---

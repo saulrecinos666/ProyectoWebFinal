@@ -1,4 +1,4 @@
-﻿using ProyectoFinal.Models.Appointments.Dto; // Agrega estos using para tus DTOs
+﻿using ProyectoFinal.Models.Appointments.Dto;
 using ProyectoFinal.Models.Doctors.Dto;
 using ProyectoFinal.Models.Institutions.Dto;
 using ProyectoFinal.Models.Patients.Dto;
@@ -10,20 +10,11 @@ using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
-using System.Collections.Generic;
-using System.IO;
-using System;
-using System.Linq; // Necesario para el .Select en algunos casos
 
-namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFinal.Services
+namespace Parcial3.Services
 {
     public class ReportService
     {
-        // ELIMINAR O RENOMBRAR: Este método es del proyecto anterior y no usa tus DTOs actuales
-        // public byte[] GenerarReporteVentas(List<Venta> ventas) { /* ... */ }
-
-        // --- MÉTODOS DE REPORTE USANDO TUS DTOs ---
-
         public byte[] GenerarReporteCitas(List<ResponseAppointmentDto> citas)
         {
             using var ms = new MemoryStream();
@@ -32,7 +23,6 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
             var doc = new Document(pdf);
             var logoPath = "wwwroot/img/logo.jpg";
 
-            // Considera agregar un try-catch para la imagen o verificar si existe
             if (File.Exists(logoPath))
             {
                 var imagenData = ImageDataFactory.Create(logoPath);
@@ -47,13 +37,11 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetMarginBottom(20));
 
-            // Ajusta el número y ancho de columnas según los campos que quieras mostrar
             var table = new Table(UnitValue.CreatePercentArray(new float[] { 3, 3, 3, 4, 2 }))
                 .UseAllAvailableWidth()
                 .SetMarginBottom(20)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
-            // Cabeceras de la tabla para Citas
             table.AddHeaderCell(new Cell().Add(new Paragraph("Paciente").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Doctor").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Institución").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
@@ -66,7 +54,7 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
                 table.AddCell(cita.DoctorName);
                 table.AddCell(cita.InstitutionName);
                 table.AddCell(cita.AppointmentDate.ToString("dd/MM/yyyy HH:mm"));
-                table.AddCell(cita.Status.ToString()); // Convierte el enum a string
+                table.AddCell(cita.Status.ToString()); 
             }
 
             doc.Add(table);
@@ -103,12 +91,11 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetMarginBottom(20));
 
-            var table = new Table(UnitValue.CreatePercentArray(new float[] { 3, 3, 2, 3, 3 })) // Nombre, Email, Teléfono, Especialidad, Institución
+            var table = new Table(UnitValue.CreatePercentArray(new float[] { 3, 3, 2, 3, 3 })) 
                 .UseAllAvailableWidth()
                 .SetMarginBottom(20)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
-            // Cabeceras de la tabla para Doctores
             table.AddHeaderCell(new Cell().Add(new Paragraph("Nombre Completo").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Email").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Teléfono").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
@@ -118,11 +105,10 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
 
             foreach (var doctor in doctores)
             {
-                // Concatenamos nombres para una mejor presentación
                 string nombreCompleto = $"{doctor.FirstName} {doctor.MiddleName} {doctor.LastName} {doctor.SecondLastName}".Trim();
                 table.AddCell(nombreCompleto);
                 table.AddCell(doctor.Email);
-                table.AddCell(doctor.Phone ?? "N/A"); // Usa N/A si el teléfono es nulo
+                table.AddCell(doctor.Phone ?? "N/A");
                 table.AddCell(doctor.SpecialtyName);
                 table.AddCell(doctor.InstitutionName);
             }
@@ -143,7 +129,7 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
         {
             using var ms = new MemoryStream();
             var writer = new PdfWriter(ms);
-            var pdf = new PdfDocument(writer); // Aquí era `ms`, debe ser `writer`
+            var pdf = new PdfDocument(writer); 
             var doc = new Document(pdf);
             var logoPath = "wwwroot/img/logo.jpg";
 
@@ -161,12 +147,11 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetMarginBottom(20));
 
-            var table = new Table(UnitValue.CreatePercentArray(new float[] { 3, 2, 1, 2, 3 })) // Nombre, FechaNac, Género, Teléfono, Email
+            var table = new Table(UnitValue.CreatePercentArray(new float[] { 3, 2, 1, 2, 3 })) 
                 .UseAllAvailableWidth()
                 .SetMarginBottom(20)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
-            // Cabeceras de la tabla para Pacientes
             table.AddHeaderCell(new Cell().Add(new Paragraph("Nombre Completo").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Fecha Nacimiento").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Género").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
@@ -217,7 +202,7 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetMarginBottom(20));
 
-            var table = new Table(UnitValue.CreatePercentArray(new float[] { 3, 4, 2, 2 })) // Nombre, Dirección, Teléfono, Email
+            var table = new Table(UnitValue.CreatePercentArray(new float[] { 3, 4, 2, 2 })) 
                 .UseAllAvailableWidth()
                 .SetMarginBottom(20)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -230,7 +215,6 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
 
             foreach (var institucion in instituciones)
             {
-                // Puedes combinar DistrictName si la quieres en la dirección o una columna aparte
                 table.AddCell(institucion.Name);
                 table.AddCell($"{institucion.Address}, {institucion.DistrictName}");
                 table.AddCell(institucion.Phone);
@@ -271,12 +255,11 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetMarginBottom(20));
 
-            var table = new Table(UnitValue.CreatePercentArray(new float[] { 2, 5, 1 })) // Nombre, Descripción, Activa
+            var table = new Table(UnitValue.CreatePercentArray(new float[] { 2, 5, 1 }))
                 .UseAllAvailableWidth()
                 .SetMarginBottom(20)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
-            // Cabeceras de la tabla para Especialidades
             table.AddHeaderCell(new Cell().Add(new Paragraph("Nombre").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Descripción").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Activa").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
@@ -322,12 +305,11 @@ namespace Parcial3.Services // Considera renombrar este namespace a ProyectoFina
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetMarginBottom(20));
 
-            var table = new Table(UnitValue.CreatePercentArray(new float[] { 3, 4, 1, 3 })) // Username, Email, Activo, CreadoEn
+            var table = new Table(UnitValue.CreatePercentArray(new float[] { 3, 4, 1, 3 })) 
                 .UseAllAvailableWidth()
                 .SetMarginBottom(20)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
-            // Cabeceras de la tabla para Usuarios
             table.AddHeaderCell(new Cell().Add(new Paragraph("Nombre de Usuario").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Email").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Activo").SetBackgroundColor(ColorConstants.DARK_GRAY).SetFontColor(ColorConstants.WHITE)));

@@ -25,7 +25,6 @@ namespace ProyectoFinal.Services
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        // --- Operaciones CRUD para Roles ---
         public async Task<List<ResponseRoleDto>> GetAllRolesAsync()
         {
             return await _context.Roles
@@ -87,14 +86,13 @@ namespace ProyectoFinal.Services
             };
 
             _context.Roles.Add(newRole);
-            await _context.SaveChangesAsync(); // Guardamos aquí para obtener el ID
+            await _context.SaveChangesAsync();
 
             if (dto.PermissionIds != null && dto.PermissionIds.Any())
             {
                 await UpdateRolePermissionsAsync(newRole.RoleId, dto.PermissionIds);
             }
 
-            // Devolvemos un DTO limpio en lugar de la entidad completa
             return new ResponseRoleDto
             {
                 RoleId = newRole.RoleId,
@@ -102,7 +100,7 @@ namespace ProyectoFinal.Services
                 Description = newRole.Description,
                 IsActive = newRole.IsActive,
                 NumberOfPermissions = dto.PermissionIds?.Count ?? 0,
-                NumberOfUsers = 0 // Un rol nuevo siempre tiene 0 usuarios
+                NumberOfUsers = 0
             };
         }
 
@@ -130,9 +128,6 @@ namespace ProyectoFinal.Services
             return true;
         }
 
-        // --- Operaciones de Asignación ---
-
-        // --- ¡MÉTODO CORREGIDO CON VALIDACIÓN! ---
         public async Task<bool> UpdateRolePermissionsAsync(int roleId, List<int> newPermissionIds)
         {
             var role = await _context.Roles
@@ -143,19 +138,15 @@ namespace ProyectoFinal.Services
 
             var currentUserIdStr = GetCurrentUserId().ToString();
 
-            // --- NUEVA VALIDACIÓN (se mantiene) ---
-            // 1. Obtenemos los IDs de los permisos que SÍ existen y están activos.
             var allValidPermissionIds = await _context.Permissions
                 .Where(p => p.IsActive == true)
                 .Select(p => p.PermissionId)
                 .ToListAsync();
 
-            // 2. Usamos solo los IDs que nos llegaron Y que son válidos.
             var validNewPermissionIds = newPermissionIds?.Intersect(allValidPermissionIds).ToList() ?? new List<int>();
 
             var currentPermissionIds = role.RolePermissions.Select(rp => rp.PermissionId).ToList();
 
-            // 3. Permisos a AÑADIR (los que están en la nueva lista pero no en la actual)
             var permissionsToAddIds = validNewPermissionIds.Except(currentPermissionIds).ToList();
             foreach (var permId in permissionsToAddIds)
             {
@@ -168,7 +159,6 @@ namespace ProyectoFinal.Services
                 });
             }
 
-            // 4. Permisos a REMOVER (los que están en la lista actual pero no en la nueva)
             var permissionsToRemoveIds = currentPermissionIds.Except(validNewPermissionIds).ToList();
             if (permissionsToRemoveIds.Any())
             {
@@ -212,8 +202,6 @@ namespace ProyectoFinal.Services
             return true;
         }
 
-
-        // --- Ayudantes ---
         public async Task<List<ResponsePermissionDto>> GetAllActivePermissionsAsync()
         {
             return await _context.Permissions

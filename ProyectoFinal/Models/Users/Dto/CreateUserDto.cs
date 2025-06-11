@@ -8,10 +8,10 @@ namespace ProyectoFinal.Models.Users.Dto
         [StringLength(50, ErrorMessage = "El Nombre de Usuario no puede exceder los 50 caracteres.")]
         public string Username { get; set; } = null!;
         
-        /*[Required(ErrorMessage = "La Contraseña es requerida.")]
+        [Required(ErrorMessage = "La Contraseña es requerida.")]
         [StringLength(100, MinimumLength = 8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres")]
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$",
-        ErrorMessage = "La contraseña debe tener al menos una mayúscula, una minúscula, un número y un carácter especial")]*/
+        ErrorMessage = "La contraseña debe tener al menos una mayúscula, una minúscula, un número y un carácter especial")]
         public string Password { get; set; } = null!;
 
         [Required(ErrorMessage = "El Correo es requerido.")]

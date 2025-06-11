@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using ProyectoFinal.Models.Base;
@@ -13,6 +12,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Models.Users.Dto;
+using Microsoft.AspNetCore.Identity;
 
 namespace ProyectoFinal.Controllers.Auth
 {
@@ -45,8 +45,6 @@ namespace ProyectoFinal.Controllers.Auth
                     .ThenInclude(ur => ur.Role)
                         .ThenInclude(r => r.RolePermissions)
                             .ThenInclude(rp => rp.Permission)
-                .Include(u => u.UserPermissions)
-                    .ThenInclude(up => up.Permission)
                 .FirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Username);
 
             if (user == null || _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password) == PasswordVerificationResult.Failed)
@@ -74,12 +72,13 @@ namespace ProyectoFinal.Controllers.Auth
                     }
                 }
             }
+
             foreach (var permissionName in grantedPermissions)
             {
                 claims.Add(new Claim("Permission", permissionName));
             }
 
-            var token = GenerateJwtToken(user, claims);
+            var token = GenerateJwtToken(claims);
             var redisDb = _redis.GetDatabase();
             await redisDb.StringSetAsync($"JWT_{user.UserId}", token, TimeSpan.FromMinutes(int.Parse(_configuration["JwtSettings:ExpiresInMinutes"])));
 
@@ -94,7 +93,6 @@ namespace ProyectoFinal.Controllers.Auth
             return Ok(new { Token = token, Message = "Inicio de sesión con éxito" });
         }
 
-        // --- MÉTODO REGISTER CORREGIDO Y OPTIMIZADO ---
         [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] CreateUserDto createUserDto)
@@ -116,32 +114,29 @@ namespace ProyectoFinal.Controllers.Auth
                 Email = createUserDto.Email,
                 PasswordHash = _passwordHasher.HashPassword(null!, createUserDto.Password),
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = 0
             };
 
-            // 1. Añadimos el nuevo usuario al contexto
             _context.Users.Add(user);
 
-            // 2. Buscamos y añadimos la asignación de rol al contexto
             var defaultRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Usuario Estándar");
             if (defaultRole != null)
             {
                 var userRole = new UserRole
                 {
-                    User = user, // Vinculamos por objeto de navegación, EF se encarga del ID
+                    User = user,
                     Role = defaultRole,
                     AssignedAt = DateTime.UtcNow,
-                    AssignedBy = "System-Registration" // Es más claro que fue una asignación del sistema
+                    AssignedBy = "System-Registration"
                 };
                 _context.UserRoles.Add(userRole);
             }
             else
             {
-                // Opcional: Registrar un log si el rol no se encuentra
                 Console.WriteLine("ADVERTENCIA: No se encontró el rol 'Usuario Estándar'. El usuario se creará sin rol.");
             }
 
-            // 3. Guardamos todos los cambios (User y UserRole) en una sola transacción
             await _context.SaveChangesAsync();
 
             var responseDto = new CreatedUserDto
@@ -159,26 +154,17 @@ namespace ProyectoFinal.Controllers.Auth
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null) return Unauthorized();
-            int userId = int.Parse(userIdClaim);
-            var redisDb = _redis.GetDatabase();
-            await redisDb.KeyDeleteAsync($"JWT_{userId}");
+
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var redisDb = _redis.GetDatabase();
+            await redisDb.KeyDeleteAsync($"JWT_{userIdClaim}");
+
             return Ok(new { Message = "Sesión cerrada correctamente." });
         }
 
-        private string GenerateJwtToken(User user, List<Claim> userClaims)
+        private string GenerateJwtToken(IEnumerable<Claim> claims)
         {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
-            claims.AddRange(userClaims.Where(c =>
-                c.Type != ClaimTypes.NameIdentifier &&
-                c.Type != ClaimTypes.Name &&
-                c.Type != ClaimTypes.Email));
-
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
@@ -186,7 +172,8 @@ namespace ProyectoFinal.Controllers.Auth
                 audience: _configuration["JwtSettings:Audience"],
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:ExpiresInMinutes"])),
-                signingCredentials: creds);
+                signingCredentials: creds
+            );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }

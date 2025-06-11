@@ -7,7 +7,6 @@ using System.Security.Claims;
 namespace ProyectoFinal.Controllers.Patients
 {
     [Authorize(Policy = "CanAccessPatients")]
-    [Authorize(Policy = "CanManagePatients")]
     [Route("PatientUI")]
     public class PatientUIController : Controller
     {

@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using ProyectoFinal.Models.Permissions.Dto; // Para ResponsePermissionDto
-using ProyectoFinal.Models.Users.Dto; // Para ResponseUserDto
+﻿using ProyectoFinal.Models.Permissions.Dto; 
 
 namespace ProyectoFinal.Models.Roles.Dto
 {
@@ -14,10 +12,8 @@ namespace ProyectoFinal.Models.Roles.Dto
         public int CreatedBy { get; set; }
         public DateTime? ModifiedAt { get; set; }
         public int? ModifiedBy { get; set; }
-
-        // Propiedades adicionales para la UI o API
-        public int NumberOfUsers { get; set; } // Cuántos usuarios tienen este rol
-        public int NumberOfPermissions { get; set; } // Cuántos permisos tiene este rol
-        public List<ResponsePermissionDto> Permissions { get; set; } = new List<ResponsePermissionDto>(); // Permisos específicos del rol
+        public int NumberOfUsers { get; set; } 
+        public int NumberOfPermissions { get; set; }
+        public List<ResponsePermissionDto> Permissions { get; set; } = new List<ResponsePermissionDto>();
     }
 }

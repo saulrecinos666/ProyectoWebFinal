@@ -2,7 +2,6 @@
 using ProyectoFinal.Models.Doctors;
 using ProyectoFinal.Models.Institutions;
 using ProyectoFinal.Models.Patients;
-using ProyectoFinal.Models.Users;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProyectoFinal.Models.Appointments;
