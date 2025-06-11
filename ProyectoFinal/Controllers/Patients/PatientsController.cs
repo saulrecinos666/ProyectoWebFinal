@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Controllers.Base;
-using ProyectoFinal.Models.Appointments;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Patients;
 using ProyectoFinal.Models.Patients.Dto;
@@ -36,7 +35,6 @@ namespace ProyectoFinal.Controllers.Patients
             // Si el usuario NO tiene permiso para gestionar todas los pacientes...
             if (!User.HasClaim("Permission", "can_manage_patients"))
             {
-                // ...filtramos las citas usando el UserId directo en la tabla de citas.
                 query = query.Where(a => a.UserId == userId);
             }
 

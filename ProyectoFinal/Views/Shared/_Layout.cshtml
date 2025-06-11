@@ -44,7 +44,7 @@
                             }
 
                             @* Gestión Doctores: Requiere permiso para gestionar doctores *@
-                            @if (User.HasClaim("Permission", "can_manage_doctors"))
+                            @if (User.HasClaim("Permission", "can_access_doctors_section"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link" asp-area="" asp-controller="DoctorUI" asp-action="Index">
@@ -84,7 +84,7 @@
                             }
 
                             @* Gestión Usuarios: Requiere permiso para gestionar usuarios *@
-                            @if (User.HasClaim("Permission", "can_manage_users"))
+                            @if (User.HasClaim("Permission", "can_access_users_section"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link" asp-area="" asp-controller="UserUI" asp-action="Index">

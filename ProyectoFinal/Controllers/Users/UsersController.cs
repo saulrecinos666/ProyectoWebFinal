@@ -7,6 +7,7 @@ using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Roles;
 using ProyectoFinal.Models.Users;
 using ProyectoFinal.Models.Users.Dto;
+using System.Security.Claims;
 
 namespace ProyectoFinal.Controllers.Users
 {
@@ -27,7 +28,21 @@ namespace ProyectoFinal.Controllers.Users
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _context.Users
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId))
+            {
+                return Unauthorized("Sesión inválida.");
+            }
+
+            var query = _context.Users.AsQueryable();
+
+            // Si el usuario NO tiene permiso para gestionar todos los usurios...
+            if (!User.HasClaim("Permission", "can_manage_users"))
+            {
+                query = query.Where(a => a.UserId == userId);
+            }
+
+            var users = await query
                 .Select(user => new ResponseUserDto
                 {
                     UserId = user.UserId,
@@ -56,6 +71,15 @@ namespace ProyectoFinal.Controllers.Users
                 .FirstOrDefaultAsync(u => u.UserId == id);
 
             if (user == null) return NotFound("No hay registros");
+
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int.TryParse(userIdStr, out var currentUserId);
+
+            // Verificamos si es admin O es el usuario.
+            if (!User.HasClaim("Permission", "can_manage_users") && user.UserId != currentUserId)
+            {
+                return Forbid();
+            }
 
             var userDto = new ResponseUserDto
             {
@@ -144,6 +168,12 @@ namespace ProyectoFinal.Controllers.Users
 
             if (existingUser == null) return NotFound("Usuario no encontrado");
 
+            var currentUserId = GetUserId();
+            if (!User.HasClaim("Permission", "can_manage_users") && existingUser.UserId != currentUserId)
+            {
+                return Forbid();
+            }
+
             if (!string.IsNullOrWhiteSpace(updateUserDto.Password))
             {
                 existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, updateUserDto.Password);
@@ -173,6 +203,12 @@ namespace ProyectoFinal.Controllers.Users
                 .FirstOrDefaultAsync(u => u.UserId == id);
 
             if (user == null) return NotFound();
+
+            var currentUserId = GetUserId();
+            if (!User.HasClaim("Permission", "can_manage_users") && user.UserId != currentUserId)
+            {
+                return Forbid();
+            }
 
             user.IsActive = false;
             user.DeletedBy = GetUserId();

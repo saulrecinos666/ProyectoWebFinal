@@ -20,14 +20,14 @@ var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
-                               policy =>
-                               {
-                                   policy.WithOrigins("http://localhost:5278", "http://192.168.1.31:5278")
-                                           .AllowAnyHeader()
-                                           .AllowAnyMethod()
-                                           .AllowAnyOrigin(); // Considera usar .AllowAnyOrigin() para desarrollo o con un filtro más estricto
-                                                              // .AllowCredentials(); // AllowCredentials no se puede usar con AllowAnyOrigin() en producción
-                               });
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5278", "http://192.168.1.31:5278")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowAnyOrigin(); // Considera usar .AllowAnyOrigin() para desarrollo o con un filtro más estricto
+                                        // .AllowCredentials(); // AllowCredentials no se puede usar con AllowAnyOrigin() en producción
+        });
 });
 
 // Obtén la cadena de conexión de Redis desde la configuración
@@ -127,6 +127,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CanViewLoginHistory", policy => policy.RequireClaim("Permission", "can_view_login_history"));
     options.AddPolicy("CanAccessAppointments", policy => policy.RequireClaim("Permission", "can_access_appointments_section"));
     options.AddPolicy("CanAccessPatients", policy => policy.RequireClaim("Permission", "can_access_patients_section"));
+    options.AddPolicy("CanAccessDoctors", policy => policy.RequireClaim("Permission", "can_access_doctors_section"));
+    options.AddPolicy("CanAccessUsers", policy => policy.RequireClaim("Permission", "can_access_users_section"));
 
     // ¡NUEVA POLÍTICA PARA GESTIÓN DE ROLES!
     options.AddPolicy("CanManageRoles", policy => policy.RequireClaim("Permission", "can_manage_roles"));

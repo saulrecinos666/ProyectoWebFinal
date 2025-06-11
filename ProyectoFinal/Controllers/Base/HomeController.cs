@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using ProyectoFinal.Models.Base;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using ProyectoFinal.Models;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore; // Asegúrate de que tu ErrorViewModel esté en este namespace o en el correcto.
                                      // Si ErrorViewModel está en Models.Base, no necesitas este using adicional.
@@ -34,14 +33,17 @@ namespace ProyectoFinal.Controllers.Base // Tu namespace actual
                     return RedirectToAction("Login", "Home");
                 }
 
-                // Usamos IgnoreQueryFilters() como la prueba definitiva
-                var patientExists = await _context.Patients.AnyAsync(p => p.UserId == userId);
-
-                if (!patientExists)
+                if (User.HasClaim("Permission", "can_manage_patients"))
                 {
-                    // Si NO existe, se va a crear el perfil
-                    TempData["InfoMessage"] = "Para usar el sistema, primero debe completar su perfil de paciente.";
-                    return RedirectToAction("Index", "PatientUI");
+                    // Usamos IgnoreQueryFilters() como la prueba definitiva
+                    var patientExists = await _context.Patients.AnyAsync(p => p.UserId == userId);
+
+                    if (!patientExists)
+                    {
+                        // Si NO existe, se va a crear el perfil
+                        TempData["InfoMessage"] = "Para usar el sistema, primero debe completar su perfil de paciente.";
+                        return RedirectToAction("Index", "PatientUI");
+                    }
                 }
 
                 // Si SÍ existe, se va al chat

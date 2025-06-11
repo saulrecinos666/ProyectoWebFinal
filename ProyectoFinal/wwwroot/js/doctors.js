@@ -4,6 +4,7 @@
     const API_DOCTORS_URL = `${API_BASE_URL}/doctor`;
     const API_SPECIALTIES_URL = `${API_BASE_URL}/specialty`;
     const API_INSTITUTIONS_URL = `${API_BASE_URL}/institution`;
+    const API_USERS_URL = `${API_BASE_URL}/User`; // Nueva URL para la API de usuarios
 
     const token = localStorage.getItem('jwtToken');
 
@@ -20,10 +21,16 @@
     const editInstitutionSelect = document.getElementById('editInstitutionId');
     const editIsActiveSelect = document.getElementById('editIsActive');
 
+    // Nuevas referencias a los campos de usuario
+    const createUserNameInput = document.getElementById('createUser');
+    const editUserNameInput = document.getElementById('editUser'); // Necesitas agregar este input en tu HTML si no lo tienes
+
     // Referencias a los modales de Bootstrap
     const createDoctorModal = new bootstrap.Modal(document.getElementById('createDoctorModal'));
     const editDoctorModal = new bootstrap.Modal(document.getElementById('editDoctorModal'));
     const detailsDoctorModal = new bootstrap.Modal(document.getElementById('detailsDoctorModal'));
+
+    const newUserContainer = document.getElementById('new-user-view-container');
 
     // --- Funciones Auxiliares ---
 
@@ -85,6 +92,41 @@
             return 'Activo';
         } else {
             return 'Inactivo';
+        }
+    }
+
+    async function getUserIdByUsername(username) {
+        if (!username) {
+            return { exists: false, userId: null, message: "El nombre de usuario no puede estar vacío." };
+        }
+        try {
+            // Asumo que tienes un endpoint en tu API de usuarios para verificar la existencia o buscar por username.
+            // Por ejemplo: GET /api/User/byUsername?username=nombredeusuario
+            // O un endpoint que devuelva todos los usuarios y luego filtras.
+            // Para simplificar, asumiré un endpoint que te devuelve el usuario o un 404.
+            const response = await fetch(`${API_USERS_URL}/byUsername?username=${encodeURIComponent(username)}`, {
+                headers: getAuthHeaders()
+            });
+
+            if (response.status === 401) {
+                showToast("Sesión Expirada", "Su sesión ha expirado. Por favor, inicie sesión de nuevo.", false);
+                localStorage.removeItem('jwtToken');
+                setTimeout(() => window.location.href = '/Home/Login', 2000);
+                return { exists: false, userId: null, message: "Sesión expirada." };
+            }
+
+            if (response.ok) {
+                const user = await response.json();
+                return { exists: true, userId: user.userId, message: "Usuario encontrado." };
+            } else if (response.status === 404) {
+                return { exists: false, userId: null, message: `El usuario '${username}' no existe.` };
+            } else {
+                const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                return { exists: false, userId: null, message: `Error al verificar usuario: ${errorData.message}` };
+            }
+        } catch (error) {
+            console.error('Error al verificar usuario:', error);
+            return { exists: false, userId: null, message: `Error de red al verificar usuario: ${error.message}` };
         }
     }
 
@@ -213,6 +255,7 @@
             row.innerHTML = `
                 <td>${doctor.doctorId}</td>
                 <td>${fullName}</td>
+                <td>${doctor.userName || 'N/A'}</td> 
                 <td>${doctor.dui || 'N/A'}</td>
                 <td>${doctor.email || 'N/A'}</td>
                 <td>${doctor.phone || 'N/A'}</td>
@@ -257,6 +300,7 @@
             document.getElementById('detailsPhone').textContent = doctor.phone || 'N/A';
             document.getElementById('detailsSpecialty').textContent = doctor.specialtyName || 'N/A';
             document.getElementById('detailsInstitution').textContent = doctor.institutionName || 'N/A';
+            document.getElementById('detailsIsActive').textContent = getStatusText(doctor.isActive);
             document.getElementById('detailsCreatedBy').textContent = doctor.createdBy || 'N/A';
             document.getElementById('detailsCreatedAt').textContent = formatDate(doctor.createdAt);
             document.getElementById('detailsModifiedBy').textContent = doctor.modifiedBy || 'N/A';
@@ -298,6 +342,7 @@
             document.getElementById('editPhone').value = doctor.phone || '';
             editSpecialtySelect.value = doctor.specialtyId ? doctor.specialtyId.toString() : '';
             editInstitutionSelect.value = doctor.institutionId ? doctor.institutionId.toString() : '';
+            editUserNameInput.value = doctor.userName || '';
 
             editDoctorModal.show();
         } catch (error) {
@@ -309,14 +354,36 @@
 
     // --- Event Listeners ---
 
-    // Inicializar la carga de doctores al cargar el DOM
-    loadDoctors();
+    if (newUserContainer) {
+        loadCreateModalSelects();
+        createDoctorModal.show();
+    } else {
+        // Inicializar la carga de doctores al cargar el DOM
+        loadDoctors();
+    }
 
     // Event listener para el formulario de Creación
     createDoctorForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        const username = createUserNameInput.value.trim();
+        let userIdToAssociate = null;
+
+        // Validar el nombre de usuario antes de crear el paciente
+        if (username) { // Solo si se proporciona un username
+            const userValidation = await getUserIdByUsername(username);
+            if (!userValidation.exists) {
+                showToast("Error de Usuario", userValidation.message, false);
+                return; // Detiene el proceso si el usuario no existe
+            }
+            userIdToAssociate = userValidation.userId;
+        } else {
+            showToast("Error de Validación", "El campo de usuario es requerido para la creación.", false);
+            return;
+        }
+
         const newDoctor = {
+            userId: userIdToAssociate,
             firstName: document.getElementById('createFirstName').value,
             middleName: document.getElementById('createMiddleName').value || null,
             lastName: document.getElementById('createLastName').value,
@@ -366,17 +433,37 @@
         e.preventDefault();
 
         const id = document.getElementById('editDoctorId').value;
-        const updatedDoctor = {
-            doctorId: parseInt(id),
-            firstName: document.getElementById('editFirstName').value,
-            middleName: document.getElementById('editMiddleName').value || null,
-            lastName: document.getElementById('editLastName').value,
-            secondLastName: document.getElementById('editSecondLastName').value || null,
-            dui: document.getElementById('editDui').value,
-            email: document.getElementById('editEmail').value,
-            phone: document.getElementById('editPhone').value || null,
-            specialtyId: parseInt(editSpecialtySelect.value),
-            institutionId: parseInt(editInstitutionSelect.value)
+        const username = editUserNameInput.value.trim();
+        let userIdToAssociate = null;
+
+        // Validar el nombre de usuario antes de actualizar el doctor
+        if (username) { // Solo si se proporciona un username
+            const userValidation = await getUserIdByUsername(username);
+            if (!userValidation.exists) {
+                showToast("Error de Usuario", userValidation.message, false);
+                return; // Detiene el proceso si el usuario no existe
+            }
+            userIdToAssociate = userValidation.userId;
+        } else {
+            // Decidir cómo manejar si el usuario se deja vacío en la edición.
+            // Opción 1: Mostrar error. Opción 2: Asignar null si el backend lo permite.
+            // Por ahora, lo haremos requerido, igual que en la creación.
+            showToast("Error de Validación", "El campo de usuario es requerido para la actualización.", false);
+            return;
+        }
+
+            const updatedDoctor = {
+                userId: userIdToAssociate, // Asignar el UserId validado
+                doctorId: parseInt(id),
+                firstName: document.getElementById('editFirstName').value,
+                middleName: document.getElementById('editMiddleName').value || null,
+                lastName: document.getElementById('editLastName').value,
+                secondLastName: document.getElementById('editSecondLastName').value || null,
+                dui: document.getElementById('editDui').value,
+                email: document.getElementById('editEmail').value,
+                phone: document.getElementById('editPhone').value || null,
+                specialtyId: parseInt(editSpecialtySelect.value),
+                institutionId: parseInt(editInstitutionSelect.value)
         };
 
         if (!updatedDoctor.firstName || !updatedDoctor.lastName || !updatedDoctor.dui || !updatedDoctor.email || isNaN(updatedDoctor.specialtyId) || isNaN(updatedDoctor.institutionId)) {
@@ -411,54 +498,56 @@
         }
     });
 
-    // Delegación de eventos para los botones de Ver, Editar, Activar y Desactivar en la tabla
-    doctorsTableBody.addEventListener('click', async function (event) {
-        const target = event.target.closest('button');
+    if (doctorsTableBody) {
+        // Delegación de eventos para los botones de Ver, Editar, Activar y Desactivar en la tabla
+        doctorsTableBody.addEventListener('click', async function (event) {
+            const target = event.target.closest('button');
 
-        if (!target) return;
+            if (!target) return;
 
-        const doctorId = target.dataset.id;
-        if (!doctorId) return;
+            const doctorId = target.dataset.id;
+            if (!doctorId) return;
 
-        if (target.classList.contains('view-btn')) {
-            showDetails(doctorId);
-        } else if (target.classList.contains('edit-btn')) {
-            populateEditForm(doctorId);
-        } else if (target.classList.contains('desactivate-btn') || target.classList.contains('activate-btn')) {
-            const action = target.classList.contains('desactivate-btn') ? 'desactivar' : 'activar';
-            const isActive = action === 'activar'; // True if activating, false if deactivating
-            const confirmMsg = `¿Está seguro de que desea ${action} este doctor?`;
+            if (target.classList.contains('view-btn')) {
+                showDetails(doctorId);
+            } else if (target.classList.contains('edit-btn')) {
+                populateEditForm(doctorId);
+            } else if (target.classList.contains('desactivate-btn') || target.classList.contains('activate-btn')) {
+                const action = target.classList.contains('desactivate-btn') ? 'desactivar' : 'activar';
+                const isActive = action === 'activar'; // True if activating, false if deactivating
+                const confirmMsg = `¿Está seguro de que desea ${action} este doctor?`;
 
-            if (confirm(confirmMsg)) {
-                try {
-                    // Si tu API tiene endpoints separados para activar/desactivar:
-                    const endpoint = isActive ? `${API_DOCTORS_URL}/${doctorId}/activate` : `${API_DOCTORS_URL}/${doctorId}/desactivate`;
+                if (confirm(confirmMsg)) {
+                    try {
+                        // Si tu API tiene endpoints separados para activar/desactivar:
+                        const endpoint = isActive ? `${API_DOCTORS_URL}/${doctorId}/activate` : `${API_DOCTORS_URL}/${doctorId}/desactivate`;
 
-                    const response = await fetch(endpoint, {
-                        method: 'PATCH', // Asumiendo que es una operación PATCH
-                        headers: getAuthHeaders()
-                    });
+                        const response = await fetch(endpoint, {
+                            method: 'PATCH', // Asumiendo que es una operación PATCH
+                            headers: getAuthHeaders()
+                        });
 
-                    if (response.status === 401) {
-                        showToast("Sesión Expirada", "Su sesión ha expirado. Por favor, inicie sesión de nuevo.", false);
-                        localStorage.removeItem('jwtToken');
-                        setTimeout(() => window.location.href = '/Home/Login', 2000);
-                        return;
+                        if (response.status === 401) {
+                            showToast("Sesión Expirada", "Su sesión ha expirado. Por favor, inicie sesión de nuevo.", false);
+                            localStorage.removeItem('jwtToken');
+                            setTimeout(() => window.location.href = '/Home/Login', 2000);
+                            return;
+                        }
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                            throw new Error(errorData.message || JSON.stringify(errorData));
+                        }
+
+                        showToast("Éxito", `Doctor ${action} correctamente.`, true);
+                        loadDoctors(); // Recargar la tabla
+                    } catch (error) {
+                        console.error(`Error al ${action} doctor:`, error);
+                        showToast(`Error al ${action}`, `Error al ${action} doctor: ${error.message}`, false);
                     }
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                        throw new Error(errorData.message || JSON.stringify(errorData));
-                    }
-
-                    showToast("Éxito", `Doctor ${action} correctamente.`, true);
-                    loadDoctors(); // Recargar la tabla
-                } catch (error) {
-                    console.error(`Error al ${action} doctor:`, error);
-                    showToast(`Error al ${action}`, `Error al ${action} doctor: ${error.message}`, false);
                 }
             }
-        }
-    });
+        });
+    }
 
     // Event listeners para los modales, para cargar los selects al abrirlos
     document.getElementById('createDoctorModal').addEventListener('show.bs.modal', loadCreateModalSelects);

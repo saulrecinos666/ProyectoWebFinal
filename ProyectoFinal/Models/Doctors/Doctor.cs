@@ -2,6 +2,7 @@
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Institutions;
 using ProyectoFinal.Models.Specialties;
+using ProyectoFinal.Models.Users;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProyectoFinal.Models.Doctors;
@@ -38,6 +39,9 @@ public partial class Doctor : BaseEntity
     public string Email { get; set; } = null!;
 
     public string? Phone { get; set; }
+    public int UserId { get; set; }
+
+    public virtual User User { get; set; } = null!;
 
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 

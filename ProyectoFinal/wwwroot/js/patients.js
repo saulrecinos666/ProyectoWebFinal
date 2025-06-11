@@ -192,7 +192,8 @@
             row.innerHTML = `
                 <td>${patient.patientId}</td>
                 <td>${fullName}</td>
-                <td>${patient.userName || 'N/A'}</td> <td>${patient.dui || 'N/A'}</td>
+                <td>${patient.userName || 'N/A'}</td> 
+                <td>${patient.dui || 'N/A'}</td>
                 <td>${patient.email || 'N/A'}</td>
                 <td>${patient.phone || 'N/A'}</td>
                 <td>${getGenderText(patient.gender)}</td>

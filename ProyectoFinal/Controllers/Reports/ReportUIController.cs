@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization; // Agregado
+﻿using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Models.Appointments.Dto;
@@ -7,16 +7,10 @@ using ProyectoFinal.Models.Institutions.Dto;
 using ProyectoFinal.Models.Patients.Dto;
 using ProyectoFinal.Models.Specialties.Dto;
 using ProyectoFinal.Models.Users.Dto;
-using Parcial3.Services; // Tu ReporteService. Verifica el namespace real si lo cambiaste.
-using ProyectoFinal.Models; // Para DbCitasMedicasContext y otras entidades de EF Core
-using ProyectoFinal.Models.Base; // Para AppointmentStatus, si está aquí
-using System.Linq;
-using System.Threading.Tasks;
+using Parcial3.Services; 
+using ProyectoFinal.Models.Base; 
 
-// EL NAMESPACE DEBE COINCIDIR CON LA UBICACIÓN DE TUS OTROS CONTROLADORES UI
-namespace ProyectoFinal.Controllers.Reports // Si es donde agrupas los UI controllers de reportes
-// O si los tienes en una carpeta "UI" general, podría ser:
-// namespace ProyectoFinal.Controllers.UI
+namespace ProyectoFinal.Controllers.Reports 
 {
     // El nombre de la clase debe ser ReportUIController para que coincida con la URL /ReportUI
     [Authorize(Policy = "CanGenerateReports")]

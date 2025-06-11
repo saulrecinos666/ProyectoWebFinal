@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Specialties;
 using ProyectoFinal.Models.Specialties.Dto;
-using ProyectoFinal.Models.Users;
 
 namespace ProyectoFinal.Controllers.Specialties
 {

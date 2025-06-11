@@ -1,14 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoFinal.Services;
-using ProyectoFinal.Models.Roles.Dto;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace ProyectoFinal.Controllers.Roles
 {
-    [Route("RoleUI")]
     [Authorize(Policy = "CanManageRoles")]
+    [Route("RoleUI")]
     public class RoleUIController : Controller
     {
         private readonly RoleService _roleService;
@@ -18,13 +15,9 @@ namespace ProyectoFinal.Controllers.Roles
             _roleService = roleService;
         }
 
-        // Vista principal: Lista de Roles
-        [HttpGet("")]
         [HttpGet("Index")] // Agregamos "Index" para ser más explícitos si es necesario
         public async Task<IActionResult> Index()
         {
-            // La vista ahora se carga vacía, y JavaScript se encarga de llenarla.
-            // No es necesario pasar un modelo aquí, pero no hace daño.
             var roles = await _roleService.GetAllRolesAsync();
             return View(roles);
         }

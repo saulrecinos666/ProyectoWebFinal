@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Models.Base;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace ProyectoFinal.Controllers.Patients
 {
-    [Authorize]
+    [Authorize(Policy = "CanAccessPatients")]
+    [Authorize(Policy = "CanManagePatients")]
     [Route("PatientUI")]
     public class PatientUIController : Controller
     {
@@ -19,7 +19,6 @@ namespace ProyectoFinal.Controllers.Patients
             _context = context;
         }
 
-        [HttpGet]
         [HttpGet("Index")]
         public async Task<IActionResult> Index()
         {
@@ -31,7 +30,12 @@ namespace ProyectoFinal.Controllers.Patients
 
             // Verificamos las dos condiciones que nos importan
             bool isAdmin = User.HasClaim("Permission", "can_manage_patients");
-            bool patientProfileExists = await _context.Patients.AnyAsync(p => p.UserId == userId);
+            bool patientProfileExists = true;
+
+            if (isAdmin == false) 
+            {
+                patientProfileExists = await _context.Patients.AnyAsync(p => p.UserId == userId);
+            }
 
             // Pasamos ambas banderas a la vista
             ViewBag.IsAdminView = isAdmin;

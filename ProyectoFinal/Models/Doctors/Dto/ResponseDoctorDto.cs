@@ -3,6 +3,8 @@
     public class ResponseDoctorDto
     {
         public int DoctorId { get; set; }
+        public int SpecialtyId { get; set; }
+        public int InstitutionId { get; set; }
         public string FirstName { get; set; } = null!;
         public string? MiddleName { get; set; }
         public string LastName { get; set; } = null!;
@@ -12,6 +14,7 @@
         public string? Phone { get; set; }
         public string SpecialtyName { get; set; } = null!;
         public string InstitutionName { get; set; } = null!;
+        public string UserName { get; set; }
         public bool IsActive { get; set; }
         public int CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }

@@ -9,6 +9,7 @@
         public string Dui { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string? Phone { get; set; }
+        public int UserId { get; set; }
         public int SpecialtyId { get; set; }
         public int InstitutionId { get; set; } 
     }

@@ -5,7 +5,6 @@ using Microsoft.IdentityModel.Tokens;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Users;
 using ProyectoFinal.Models.Roles;
-using ProyectoFinal.Models.Permissions;
 using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -73,13 +72,6 @@ namespace ProyectoFinal.Controllers.Auth
                             grantedPermissions.Add(rolePermission.Permission.PermissionName);
                         }
                     }
-                }
-            }
-            foreach (var userPermission in user.UserPermissions)
-            {
-                if (userPermission.Permission != null && userPermission.Permission.IsActive == true)
-                {
-                    grantedPermissions.Add(userPermission.Permission.PermissionName);
                 }
             }
             foreach (var permissionName in grantedPermissions)

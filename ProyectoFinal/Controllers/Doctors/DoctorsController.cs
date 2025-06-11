@@ -5,6 +5,7 @@ using ProyectoFinal.Controllers.Base;
 using ProyectoFinal.Models.Base;
 using ProyectoFinal.Models.Doctors;
 using ProyectoFinal.Models.Doctors.Dto;
+using System.Security.Claims;
 
 namespace ProyectoFinal.Controllers.Doctors
 {
@@ -23,12 +24,28 @@ namespace ProyectoFinal.Controllers.Doctors
         [HttpGet]
         public async Task<IActionResult> GetAllDoctors()
         {
-            var doctors = await _context.Doctors
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out var userId))
+            {
+                return Unauthorized("Sesión inválida.");
+            }
+
+            var query = _context.Doctors.AsQueryable();
+
+            // Si el usuario NO tiene permiso para gestionar todas los doctores...
+            if (!User.HasClaim("Permission", "can_manage_doctors"))
+            {
+                query = query.Where(a => a.UserId == userId);
+            }
+
+            var doctors = await query
+                .Include(p => p.User)
                 .Include(d => d.Specialty)
                 .Include(d => d.Institution)
                 .Select(d => new ResponseDoctorDto
                 {
                     DoctorId = d.DoctorId,
+                    UserName = d.User != null ? d.User.Username : "NA",
                     FirstName = d.FirstName,
                     LastName = d.LastName,
                     MiddleName = d.MiddleName,
@@ -53,15 +70,28 @@ namespace ProyectoFinal.Controllers.Doctors
         public async Task<IActionResult> GetDoctorById(int id)
         {
             var doctor = await _context.Doctors
+                .Include(p => p.User)
                 .Include(d => d.Specialty)
                 .Include(d => d.Institution)
                 .FirstOrDefaultAsync(a => a.DoctorId == id);
 
             if (doctor == null) return NotFound();
 
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int.TryParse(userIdStr, out var currentUserId);
+
+            // Verificamos si es admin O es el doctor.
+            if (!User.HasClaim("Permission", "can_manage_doctors") && doctor.UserId != currentUserId)
+            {
+                return Forbid();
+            }
+
             var doctorDto = new ResponseDoctorDto
             {
                 DoctorId = doctor.DoctorId,
+                SpecialtyId = doctor.SpecialtyId,
+                InstitutionId = doctor.InstitutionId,
+                UserName = doctor.User != null ? doctor.User.Username : "NA",
                 FirstName = doctor.FirstName,
                 LastName = doctor.LastName,
                 MiddleName = doctor.MiddleName,
@@ -88,6 +118,7 @@ namespace ProyectoFinal.Controllers.Doctors
 
             var doctor = new Doctor
             {
+                UserId = createDoctorDto.UserId,
                 FirstName = createDoctorDto.FirstName,
                 MiddleName = createDoctorDto.MiddleName,
                 LastName = createDoctorDto.LastName,
@@ -112,6 +143,7 @@ namespace ProyectoFinal.Controllers.Doctors
 
             var responseDto = new ResponseDoctorDto
             {
+                UserName = createDoctor.User != null ? createDoctor.User.Username : "NA",
                 FirstName = createDoctor.FirstName,
                 MiddleName = createDoctor.MiddleName,
                 LastName = createDoctor.LastName,
@@ -136,6 +168,13 @@ namespace ProyectoFinal.Controllers.Doctors
 
             if (existingDoctor == null) return NotFound("Doctor no encontrado");
 
+            var currentUserId = GetUserId();
+            if (!User.HasClaim("Permission", "can_manage_doctors") && existingDoctor.UserId != currentUserId)
+            {
+                return Forbid();
+            }
+
+            existingDoctor.UserId = updateDoctorDto.UserId;
             existingDoctor.FirstName = updateDoctorDto.FirstName;
             existingDoctor.MiddleName = updateDoctorDto.MiddleName;
             existingDoctor.LastName = updateDoctorDto.LastName;
@@ -159,6 +198,12 @@ namespace ProyectoFinal.Controllers.Doctors
                 .FirstOrDefaultAsync(d => d.DoctorId == id);
 
             if (doctor == null) return NotFound();
+
+            var currentUserId = GetUserId();
+            if (!User.HasClaim("Permission", "can_manage_doctors") && doctor.UserId != currentUserId)
+            {
+                return Forbid();
+            }
 
             doctor.DeletedAt = DateTime.Now;
             doctor.DeletedBy = GetUserId();

@@ -2,13 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using ProyectoFinal.Models.Roles.Dto;
 using ProyectoFinal.Services;
-using System.Collections.Generic; // Para List<int>
-using System.Threading.Tasks;
 
 namespace ProyectoFinal.Controllers.Api
 {
     [ApiController]
-    [Route("api")] // <-- CAMBIO 1: Hacemos la ruta base más flexible
+    [Route("api/roles")] // <-- CAMBIO 1: Hacemos la ruta base más flexible
     [Authorize(Policy = "CanManageRoles")]
     public class RolesController : ControllerBase
     {
@@ -21,14 +19,14 @@ namespace ProyectoFinal.Controllers.Api
 
         // --- Endpoints de Roles existentes ---
 
-        [HttpGet("roles")]
+        [HttpGet]
         public async Task<IActionResult> GetAllRoles()
         {
             var roles = await _roleService.GetAllRolesAsync();
             return Ok(roles);
         }
 
-        [HttpGet("roles/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetRoleById(int id)
         {
             var role = await _roleService.GetRoleByIdAsync(id);
@@ -36,7 +34,7 @@ namespace ProyectoFinal.Controllers.Api
             return Ok(role);
         }
 
-        [HttpPost("roles")]
+        [HttpPost]
         public async Task<IActionResult> CreateRole([FromBody] CreateRoleDto dto)
         {
             if (!ModelState.IsValid)
@@ -58,7 +56,7 @@ namespace ProyectoFinal.Controllers.Api
             }
         }
 
-        [HttpPut("roles/{id}")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRole(int id, [FromBody] UpdateRoleDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -66,14 +64,14 @@ namespace ProyectoFinal.Controllers.Api
             return NoContent();
         }
 
-        [HttpDelete("roles/{id}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRole(int id)
         {
             if (!await _roleService.DeleteRoleAsync(id)) return NotFound();
             return NoContent();
         }
 
-        [HttpPost("roles/{roleId}/permissions")]
+        [HttpPost("{roleId}/permissions")]
         public async Task<IActionResult> UpdateRolePermissions(int roleId, [FromBody] AssignPermissionsToRoleDto dto)
         {
             if (roleId != dto.RoleId) return BadRequest("IDs no coinciden.");
@@ -81,7 +79,7 @@ namespace ProyectoFinal.Controllers.Api
             return NoContent();
         }
 
-        [HttpGet("roles/permissions")]
+        [HttpGet("permissions")]
         public async Task<IActionResult> GetAllPermissions()
         {
             var permissions = await _roleService.GetAllActivePermissionsAsync();
@@ -102,7 +100,7 @@ namespace ProyectoFinal.Controllers.Api
 
         // GET: /api/roles/{roleId}/users
         // Devuelve los IDs de los usuarios que ya tienen asignado un rol.
-        [HttpGet("roles/{roleId}/users")]
+        [HttpGet("{roleId}/users")]
         public async Task<IActionResult> GetAssignedUsersForRole(int roleId)
         {
             var userIds = await _roleService.GetAssignedUserIdsForRoleAsync(roleId);
@@ -111,7 +109,7 @@ namespace ProyectoFinal.Controllers.Api
 
         // POST: /api/roles/{roleId}/assign-users
         // Recibe una lista de IDs de usuario y los asigna a un rol, reemplazando los anteriores.
-        [HttpPost("roles/{roleId}/assign-users")]
+        [HttpPost("{roleId}/assign-users")]
         public async Task<IActionResult> AssignUsersToRole(int roleId, [FromBody] List<int> userIds)
         {
             var result = await _roleService.AssignUsersToRoleAsync(roleId, userIds);
