@@ -1,6 +1,9 @@
 ﻿document.addEventListener('DOMContentLoaded', function () {
     // Definición de constantes para las URLs de la API
-    const API_BASE_URL = "http://localhost:5278/api"; // Asegúrate de que esta URL sea correcta
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const API_BASE_URL = isLocalhost
+        ? "http://localhost:5278/api"
+        : "https://b4ndxm8brf.us-east-2.awsapprunner.com/api";
     const API_PATIENTS_URL = `${API_BASE_URL}/patient`;
     const API_USERS_URL = `${API_BASE_URL}/User`; // Nueva URL para la API de usuarios
 

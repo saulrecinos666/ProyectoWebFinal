@@ -22,8 +22,25 @@ namespace ProyectoFinal.Controllers.Api
         [HttpGet]
         public async Task<IActionResult> GetAllRoles()
         {
-            var roles = await _roleService.GetAllRolesAsync();
-            return Ok(roles);
+            var rolesDeLaBD = await _roleService.GetAllRolesAsync();
+
+            // 2. AÑADE ESTE PASO DE MAPEO A TU DTO:
+            // Transforma la lista de objetos de EF a una lista de DTOs "planos".
+            // Asumo que tu DTO se llama ResponseRoleDto.
+            var rolesParaLaVista = rolesDeLaBD.Select(rol => new ResponseRoleDto
+            {
+                // Aquí copia las propiedades que tu DTO necesite. Por ejemplo:
+                RoleId = rol.RoleId,
+                RoleName = rol.RoleName,
+                Description = rol.Description,
+                IsActive = rol.IsActive,
+                // Si tu DTO incluye cuentas de usuarios/permisos, puedes mapearlas aquí:
+                NumberOfUsers = rol.NumberOfUsers,
+                NumberOfPermissions = rol.NumberOfPermissions
+            }).ToList();
+
+            // 3. Devuelve la lista de DTOs. ¡Esto ya no tiene bucles!
+            return Ok(rolesParaLaVista);
         }
 
         [HttpGet("{id}")]

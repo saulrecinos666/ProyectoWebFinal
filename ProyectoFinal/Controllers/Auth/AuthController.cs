@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using ProyectoFinal.Models.Users.Dto;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
+using ProyectoFinal.Services;
 
 namespace ProyectoFinal.Controllers.Auth
 {
@@ -51,11 +53,11 @@ namespace ProyectoFinal.Controllers.Auth
                 return Unauthorized(new { Message = "Credenciales incorrectas." });
 
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Email, user.Email)
+        };
 
             var grantedPermissions = new HashSet<string>();
             foreach (var userRole in user.UserRoles)
@@ -78,17 +80,45 @@ namespace ProyectoFinal.Controllers.Auth
                 claims.Add(new Claim("Permission", permissionName));
             }
 
+            // Asegúrate de que este método GenerateJwtToken toma List<Claim> como parámetro
             var token = GenerateJwtToken(claims);
+
             var redisDb = _redis.GetDatabase();
             await redisDb.StringSetAsync($"JWT_{user.UserId}", token, TimeSpan.FromMinutes(int.Parse(_configuration["JwtSettings:ExpiresInMinutes"])));
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            // --- CAMBIO CLAVE AQUÍ PARA "RECORDARME" ---
+            var cookieExpiresInMinutes = int.Parse(_configuration["JwtSettings:ExpiresInMinutes"]);
+
             var authProperties = new AuthenticationProperties
             {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(int.Parse(_configuration["JwtSettings:ExpiresInMinutes"]))
+                // La cookie será persistente SOLO si request.RememberMe es true
+                IsPersistent = request.RememberMe,
+                // La fecha de expiración de la cookie
+                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(cookieExpiresInMinutes)
             };
+
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+
+            try
+            {
+                var newLoginHistory = new UserLoginHistory
+                {
+                    UserId = user.UserId,
+                    LoginDate = DateTime.UtcNow,
+                    IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "IP Desconocida"
+                };
+
+                _context.UserLoginHistories.Add(newLoginHistory);
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al guardar el historial de login para el usuario {user.UserId}: {ex.Message}");
+                // Considera loggear esto con un ILogger si estás usando logging estructurado
+            }
 
             return Ok(new { Token = token, Message = "Inicio de sesión con éxito" });
         }

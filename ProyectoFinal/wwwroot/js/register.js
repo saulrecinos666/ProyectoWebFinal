@@ -1,7 +1,12 @@
 ﻿document.addEventListener('DOMContentLoaded', function () {
     // Definición de constantes para las URLs de la API
-    const API_REGISTER_URL = "http://localhost:5278/api/auth/register";
-    const API_LOGIN_URL = "http://localhost:5278/api/auth/login";
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const API_BASE_URL = isLocalhost
+        ? "http://localhost:5278/api"
+        : "https://b4ndxm8brf.us-east-2.awsapprunner.com/api";
+
+    const API_REGISTER_URL = `${API_BASE_URL}/auth/register`;
+    const API_LOGIN_URL = `${API_BASE_URL}/auth/login`;
 
     const registerForm = document.getElementById('registerForm');
     if (!registerForm) return; // Si no estamos en la página de registro, no hacer nada.

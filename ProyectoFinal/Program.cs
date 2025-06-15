@@ -9,9 +9,12 @@ using StackExchange.Redis;
 using ProyectoFinal.Hubs;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Parcial3.Services; // Asegúrate de que este namespace es el correcto para tu ReportService y RoleService
-using ProyectoFinal.Services; // ¡NUEVO! Este using para RoleService si lo moviste aquí
-using Microsoft.AspNetCore.Http; // ¡NUEVO! Necesario para IHttpContextAccessor
+using Parcial3.Services; // Asegúrate de que este namespace es el correcto para tu ReportService
+using ProyectoFinal.Services; // ¡Importante! Para IEmailService y EmailService, y RoleService
+using Microsoft.AspNetCore.HttpOverrides; // Necesario para ForwardedHeaders y ForwardedHeadersOptions
+using Microsoft.AspNetCore.Http; // Necesario para IHttpContextAccessor
+using Microsoft.AspNetCore.Hosting; // Necesario si quieres IWebHostEnvironment inyectado en servicios/controladores
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,12 +29,12 @@ builder.Services.AddCors(options =>
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowAnyOrigin(); // Considera usar .AllowAnyOrigin() para desarrollo o con un filtro más estricto
-                                        // .AllowCredentials(); // AllowCredentials no se puede usar con AllowAnyOrigin() en producción
+                                       // .AllowCredentials(); // AllowCredentials no se puede usar con AllowAnyOrigin() en producción
         });
 });
 
 // Obtén la cadena de conexión de Redis desde la configuración
-var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
 
 Console.WriteLine($"DEBUG: Redis Connection String used by SignalR: {redisConnectionString}");
 
@@ -45,7 +48,7 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 // Esta inyección de IConnectionMultiplexer también usará la misma cadena de conexión
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
-    var configuration = builder.Configuration.GetConnectionString("Redis");
+    var configuration = builder.Configuration.GetConnectionString("RedisConnection");
     return ConnectionMultiplexer.Connect(configuration);
 });
 
@@ -96,15 +99,15 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddDbContext<DbCitasMedicasContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlServerOptions => sqlServerOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
 // Registro de tu ReportService
 builder.Services.AddScoped<ReportService>();
 
-// --- ¡NUEVO! Registro de IHttpContextAccessor y RoleService ---
+// Registro de IHttpContextAccessor y RoleService
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>(); // Necesario para RoleService
-builder.Services.AddScoped<RoleService>(); // Registro de tu nuevo RoleService
-// --- FIN: Registro de IHttpContextAccessor y RoleService ---
+builder.Services.AddScoped<RoleService>(); // Registro de tu RoleService
 
 // Configuración de Políticas de Autorización
 builder.Services.AddAuthorization(options =>
@@ -148,7 +151,18 @@ var app = builder.Build();
 
 // --- Orden del pipeline de middleware: CRÍTICO ---
 
-app.UseHttpsRedirection();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+// Para desarrollo local, puedes envolver UseHttpsRedirection en un check de entorno
+// si no quieres que redirija en HTTP localmente.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -179,6 +193,18 @@ else
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// ¡NUEVO! Ruta para la página de "Olvidé mi Contraseña"
+app.MapControllerRoute(
+    name: "forgotPassword",
+    pattern: "Home/ForgotPassword",
+    defaults: new { controller = "Home", action = "ForgotPassword" });
+
+// ¡NUEVO! Ruta para la página de "Restablecer Contraseña"
+app.MapControllerRoute(
+    name: "resetPassword",
+    pattern: "Home/ResetPassword",
+    defaults: new { controller = "Home", action = "ResetPassword" });
 
 app.MapControllers();
 

@@ -1,6 +1,9 @@
 ﻿document.addEventListener('DOMContentLoaded', function () {
     // --- URLs Y REFERENCIAS A ELEMENTOS ---
-    const API_BASE_URL = "http://localhost:5278/api";
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const API_BASE_URL = isLocalhost
+        ? "http://localhost:5278/api"
+        : "https://b4ndxm8brf.us-east-2.awsapprunner.com/api";
     const API_APPOINTMENTS_URL = `${API_BASE_URL}/appointment`;
     const API_DOCTORS_URL = `${API_BASE_URL}/doctor`;
     const API_PATIENTS_URL = `${API_BASE_URL}/patient`;
